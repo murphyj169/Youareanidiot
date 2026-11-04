@@ -4,17 +4,18 @@ A single-file recreation of the "You are an idiot!" meme as seen in its best-kno
 demo: a Windows 98 desktop runs `idiot.exe`, Internet Explorer opens the classic two-frame
 Flash loop (serif "you are an idiot", three hopping smileys, black/white strobe), then small
 IE popups bounce around the screen, each flashing on its own clock, and every attempt to
-close one brings up a "You are an idiot!" message box and spawns more. The choir and the laugh are synthesized with the
-Web Audio API, so there are no external assets. The synthesis was tuned against onset and
-spectral analysis of the original 5.0 s clip: six sung syllables on a B major chord, then
-sixteen shrill laughs around B4, with the screen inverting every 333 ms (4 frames at 12 fps)
-as in the original Flash file. `window.renderIdiotLoop(seconds)` renders one loop offline
-for checking.
+close one brings up a "You are an idiot!" message box and spawns more. Every window plays its own copy of the jingle, "You are an idiot! Ha ha ha ha ha ha ha ha!",
+starting when it opens, so the copies pile up as the windows multiply. The jingle is an
+original recording made for this page: an offline text-to-speech voice (Piper), pitched up
+into a three-voice chord and placed on the original 5-second timing. An offline speech
+recognizer transcribes it as "you are an idiot | ha ha ha ha ha ha ha ha". It is embedded as a
+small MP3, so the page has no external assets.
 
-Open `index.html` in a browser. The desktop runs inside a widescreen PC monitor at a fixed
-resolution (1280x800, 1024x640 or 768x480, whichever fits) scaled to the window, so it is
-made for landscape. On a phone, turn it sideways and tap Full screen on the monitor's bezel;
-supported browsers also lock to landscape. The bezel's power button turns the monitor off
+Open `index.html` in a browser. On a computer the desktop runs inside a widescreen PC
+monitor at a fixed resolution (1280x800, 1024x640 or 768x480, whichever fits). On touch
+screens and small windows the Windows 98 screen fills the whole viewport instead, and in
+portrait it is turned sideways so it still runs landscape. The first tap or click asks for
+full screen and a landscape lock where the browser allows it (iPhone Safari does not). The bezel's power button turns the monitor off
 and on, and its LED blinks amber while the system is hung.
 
 Every step is driven by you:
