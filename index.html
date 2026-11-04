@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- BEGIN ARTIFACT -->
+<title>You Are An Idiot</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: a simulated Windows XP desktop. The prank window bounces inside the
+   desktop area, a taskbar sits at the bottom, dialogs float on top. Single
+   theme by choice: this page imitates one specific operating system look. */
+:root {
+  --desk-top: #4f94e6;          /* XP "Bliss" sky */
+  --desk-bottom: #1d4d9c;
+  --chrome: #0831d9;            /* Luna title bar */
+  --chrome-hi: #3f8cf3;
+  --chrome-lo: #0423a8;
+  --close: #d8562f;
+  --close-hi: #f08a62;
+  --paper: #ece9d8;             /* XP dialog grey */
+  --paper-edge: #aca899;
+  --ink: #000000;
+  --ink-soft: #444444;
+  --link: #0a246a;
+  --start: #3c9b2b;
+  --start-hi: #7bd65a;
+  --task: #245edb;
+  --task-lo: #1941a5;
+  --tray: #0f9bf0;
+  --amber: #ffb000;             /* "safe to turn off" screen */
+  --font-ui: Tahoma, Verdana, "Segoe UI", "DejaVu Sans", sans-serif;
+  --font-meme: "Times New Roman", Times, "Liberation Serif", "Nimbus Roman", serif;
+  --font-mono: "Lucida Console", "Courier New", Menlo, monospace;
+  --ww: clamp(220px, 60vw, 360px);
+  color-scheme: light;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--desk-top) 0%, var(--desk-bottom) 100%);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  -webkit-user-select: none;
+  user-select: none;
+}
+button { font-family: inherit; font-size: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outline-offset: 1px; }
+
+#desktop {
+  position: relative;
+  height: 100%;
+  box-sizing: border-box;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 12px 46px;
+  overflow: hidden;
+}
+#field { position: relative; width: 100%; height: 100%; }
+
+/* Desktop icon */
+.dicon {
+  position: absolute; top: 8px; left: 0;
+  width: 84px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.9); text-align: center;
+  cursor: pointer; padding: 4px; border-radius: 3px; background: transparent; border: 0;
+}
+.dicon:hover, .dicon:focus-visible { background: rgba(255,255,255,.15); }
+.dicon .pic { width: 40px; height: 40px; }
+.dicon .lbl { font-size: 12px; line-height: 1.2; word-break: break-all; }
+
+/* Prank window (XP Luna chrome) */
+.win {
+  position: absolute; top: 0; left: 0;
+  width: var(--ww);
+  border: 3px solid var(--chrome);
+  border-top: 0;
+  border-radius: 8px 8px 0 0;
+  background: var(--chrome);
+  box-shadow: 0 6px 18px rgba(0,0,0,.35);
+  will-change: transform;
+}
+.tbar {
+  height: 28px; display: flex; align-items: center; gap: 6px;
+  padding: 0 4px 0 6px;
+  border-radius: 7px 7px 0 0;
+  background: linear-gradient(180deg, var(--chrome-hi) 0%, var(--chrome) 12%, var(--chrome) 70%, var(--chrome-lo) 100%);
+  color: #fff; font-weight: 700; font-size: 13px;
+  text-shadow: 1px 1px 0 rgba(0,0,0,.6);
+  cursor: default;
+}
+.tbar .ico { width: 16px; height: 16px; flex: none; }
+.tbar .ttl { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tbar .btns { display: flex; gap: 2px; }
+.tbar button {
+  width: 21px; height: 21px; padding: 0; border-radius: 3px;
+  border: 1px solid #fff; color: #fff; font-weight: 700; line-height: 1;
+  background: linear-gradient(180deg, #5a9cf5, var(--task));
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.25);
+}
+.tbar button.cls { background: linear-gradient(180deg, var(--close-hi), var(--close)); }
+.tbar button:hover { filter: brightness(1.15); }
+.screen {
+  display: block;
+  width: 100%; aspect-ratio: 4 / 3; max-width: 100%;
+  background: #fff center / 100% 100% no-repeat;
+  background-image: var(--frame-a);
+}
+.phase-b .screen { background-image: var(--frame-b); }
+
+/* Taskbar */
+#taskbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+  height: 34px;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  display: flex; align-items: stretch;
+  background: linear-gradient(180deg, #3168d5 0%, var(--task) 8%, var(--task) 90%, var(--task-lo) 100%);
+  box-shadow: 0 -1px 0 #6b9ff2;
+}
+#start {
+  flex: none; display: flex; align-items: center; gap: 6px;
+  padding: 0 14px 0 max(10px, env(safe-area-inset-left, 0px));
+  border: 0; border-radius: 0 12px 12px 0;
+  background: linear-gradient(180deg, var(--start-hi) 0%, var(--start) 20%, #2f7f22 100%);
+  color: #fff; font-style: italic; font-weight: 700; font-size: 16px;
+  text-shadow: 1px 1px 1px rgba(0,0,0,.6); box-shadow: 2px 0 4px rgba(0,0,0,.3);
+}
+#start:hover { filter: brightness(1.1); }
+#tasks { flex: 1; min-width: 0; display: flex; align-items: center; gap: 4px; padding: 0 6px; overflow: hidden; }
+.tbtn {
+  display: flex; align-items: center; gap: 6px; height: 24px; padding: 0 8px;
+  border: 1px solid #0f3fb0; border-radius: 3px; color: #fff; font-size: 12px; white-space: nowrap;
+  background: linear-gradient(180deg, #1f4fc9, #1a44b0); box-shadow: inset 1px 1px 0 rgba(255,255,255,.25);
+}
+.tbtn .ico { width: 14px; height: 14px; }
+#tray {
+  flex: none; display: flex; align-items: center; gap: 8px;
+  padding: 0 max(10px, env(safe-area-inset-right, 0px)) 0 10px;
+  background: linear-gradient(180deg, #19a7f6 0%, var(--tray) 60%, #0d7fd0 100%);
+  box-shadow: inset 2px 0 3px rgba(0,0,0,.25); color: #fff; font-size: 12px;
+}
+#mute { width: 22px; height: 22px; padding: 0; border: 0; background: transparent; color: #fff; }
+#mute svg { width: 18px; height: 18px; display: block; }
+#clock { font-variant-numeric: tabular-nums; }
+
+#startmenu {
+  position: fixed; left: max(0px, env(safe-area-inset-left, 0px)); bottom: calc(34px + env(safe-area-inset-bottom, 0px));
+  z-index: 60; width: 230px;
+  border: 1px solid var(--chrome-lo); border-radius: 6px 6px 0 0; overflow: hidden;
+  background: #fff; box-shadow: 2px 2px 8px rgba(0,0,0,.4);
+}
+#startmenu .head {
+  padding: 8px 10px; color: #fff; font-weight: 700;
+  background: linear-gradient(180deg, var(--chrome-hi), var(--chrome));
+}
+#startmenu .item {
+  display: block; width: 100%; text-align: left; padding: 9px 12px; border: 0; background: #fff; color: var(--ink);
+}
+#startmenu .item:hover { background: var(--task); color: #fff; }
+#startmenu .foot { padding: 6px 10px; background: linear-gradient(180deg, var(--chrome), var(--chrome-lo)); }
+#startmenu .foot .item { background: transparent; color: #fff; padding: 6px 2px; }
+#startmenu .foot .item:hover { text-decoration: underline; }
+
+/* Dialog: Open File - Security Warning */
+#dim { position: fixed; inset: 0; z-index: 70; display: flex; align-items: center; justify-content: center;
+  padding: 16px max(16px, env(safe-area-inset-left, 0px)); box-sizing: border-box; }
+.dlg {
+  width: 100%; max-width: 420px;
+  border: 3px solid var(--chrome); border-top: 0; border-radius: 8px 8px 0 0;
+  background: var(--chrome); box-shadow: 0 8px 24px rgba(0,0,0,.45);
+}
+.dlg .body { background: var(--paper); padding: 14px 14px 12px; display: flex; flex-direction: column; gap: 12px; }
+.dlg .row { display: flex; gap: 12px; align-items: flex-start; }
+.dlg .shield { width: 36px; height: 36px; flex: none; }
+.dlg p { margin: 0; line-height: 1.4; }
+.dlg dl { margin: 0 0 0 48px; display: grid; grid-template-columns: 70px 1fr; row-gap: 4px; column-gap: 8px; }
+.dlg dt { color: var(--ink-soft); }
+.dlg dd { margin: 0; font-weight: 700; min-width: 0; overflow-wrap: anywhere; }
+.dlg .warn { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; background: #fff8dc; border: 1px solid #d8c070; }
+.dlg .warn svg { width: 22px; height: 22px; flex: none; }
+.dlg label { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+.dlg .acts { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+.xpbtn {
+  min-width: 84px; height: 24px; padding: 0 12px;
+  border: 1px solid #003c74; border-radius: 3px;
+  background: linear-gradient(180deg, #fff 0%, #ece9d8 100%);
+  color: var(--ink); box-shadow: inset 0 0 0 1px #fff;
+}
+.xpbtn.primary { box-shadow: inset 0 0 0 1px #fff, 0 0 0 2px #7aa7ff; }
+.xpbtn:hover { background: linear-gradient(180deg, #fff 0%, #fde9b5 100%); border-color: #e5a533; }
+.dlg .note { color: var(--ink-soft); font-size: 11px; margin-left: 48px; }
+
+/* Shut-down screen */
+#off {
+  position: fixed; inset: 0; z-index: 80; background: #000;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px;
+  padding: 24px max(16px, env(safe-area-inset-left, 0px)); box-sizing: border-box; text-align: center;
+}
+#off h1 { font: 700 clamp(18px, 3.4vw, 30px)/1.3 var(--font-mono); color: var(--amber); margin: 0; text-wrap: balance; }
+#off button { border: 1px solid var(--amber); background: #000; color: var(--amber); font-family: var(--font-mono); padding: 8px 18px; }
+#off button:hover { background: var(--amber); color: #000; }
+#off .small { color: #8a6a1a; font-family: var(--font-mono); font-size: 12px; max-width: 48ch; margin: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .win { transition: none; }
+}
+</style>
+
+<div id="desktop">
+  <div id="field">
+    <button class="dicon" id="exeicon" type="button" title="Open youareanidiot.exe" hidden>
+      <svg class="pic" viewBox="0 0 40 40" aria-hidden="true">
+        <rect x="4" y="3" width="32" height="34" rx="2" fill="#fff" stroke="#333"/>
+        <circle cx="20" cy="21" r="10" fill="#fff" stroke="#000" stroke-width="2.4"/>
+        <circle cx="16.3" cy="18.2" r="1.7" fill="#000"/><circle cx="23.7" cy="18.2" r="1.7" fill="#000"/>
+        <path d="M14.5 24.2q5.5 4.8 11 0" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round"/>
+      </svg>
+      <span class="lbl">youareanidiot.exe</span>
+    </button>
+  </div>
+</div>
+
+<div id="taskbar">
+  <button id="start" type="button" aria-haspopup="true" aria-expanded="false">
+    <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 4.5 9 3.6v6.1H3zM10.2 3.4 17 2.4v7.3h-6.8zM3 10.5h6v6.1l-6-.9zM10.2 10.5H17v7.2l-6.8-1z" fill="#fff"/></svg>
+    start
+  </button>
+  <div id="tasks"></div>
+  <div id="tray">
+    <button id="mute" type="button" title="Mute" aria-label="Mute" aria-pressed="false">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7h3l4-3.5v13L6 13H3z" fill="#fff"/><path id="spk" d="M12.5 7.2a4 4 0 0 1 0 5.6M14.6 5a7 7 0 0 1 0 10" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </button>
+    <span id="clock">12:00 AM</span>
+  </div>
+</div>
+
+<div id="startmenu" hidden>
+  <div class="head">You</div>
+  <button class="item" type="button" id="sm-run">Run youareanidiot.exe again</button>
+  <button class="item" type="button" id="sm-mute">Mute sound</button>
+  <div class="foot"><button class="item" type="button" id="sm-off">Turn Off Computer</button></div>
+</div>
+
+<div id="dim">
+  <div class="dlg" role="dialog" aria-labelledby="dlg-title" aria-modal="true">
+    <div class="tbar"><span class="ttl" id="dlg-title">Open File - Security Warning</span></div>
+    <div class="body">
+      <div class="row">
+        <svg class="shield" viewBox="0 0 36 36" aria-hidden="true">
+          <path d="M18 2 32 7v10c0 8-6 14-14 17C10 31 4 25 4 17V7z" fill="#e9b422" stroke="#8a5a00" stroke-width="1.5"/>
+          <path d="M18 9v11" stroke="#000" stroke-width="3.2" stroke-linecap="round"/><circle cx="18" cy="25.5" r="2" fill="#000"/>
+        </svg>
+        <p><strong>The publisher could not be verified. Are you sure you want to run this software?</strong></p>
+      </div>
+      <dl>
+        <dt>Name:</dt><dd>youareanidiot.exe</dd>
+        <dt>Publisher:</dt><dd>Unknown Publisher</dd>
+        <dt>Type:</dt><dd>Application</dd>
+        <dt>From:</dt><dd>C:\Documents and Settings\You\Desktop</dd>
+      </dl>
+      <div class="warn">
+        <svg viewBox="0 0 22 22" aria-hidden="true"><path d="M11 2 21 20H1z" fill="#ffd54a" stroke="#8a5a00"/><path d="M11 8v6" stroke="#000" stroke-width="2.2" stroke-linecap="round"/><circle cx="11" cy="17" r="1.3" fill="#000"/></svg>
+        <p>This program flashes black and white several times a second and plays loud sound. If you are sensitive to flashing light, turn on reduced flashing below or press Cancel.</p>
+      </div>
+      <label><input type="checkbox" id="reduce"> Reduce flashing (slower, lower contrast)</label>
+      <div class="acts">
+        <button class="xpbtn primary" type="button" id="run">Run</button>
+        <button class="xpbtn" type="button" id="cancel">Cancel</button>
+      </div>
+      <p class="note">Trying to close the program will not go well. Press Esc or use Start &gt; Turn Off Computer to stop it.</p>
+    </div>
+  </div>
+</div>
+
+<div id="off" hidden>
+  <h1>It's now safe to turn off your computer.</h1>
+  <p class="small">The program has been stopped and the sound has been silenced.</p>
+  <button type="button" id="reboot">Restart</button>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var desktop = $('desktop'), field = $('field'), tasks = $('tasks');
+  var dim = $('dim'), off = $('off'), startmenu = $('startmenu'), exeicon = $('exeicon');
+  var reduceBox = $('reduce');
+  var MAX_WINDOWS = 40;
+  var S = { running: false, reduced: false, muted: false, windows: [], raf: 0, flashTimer: 0, phase: 0, lastT: 0 };
+
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) reduceBox.checked = true;
+
+  /* ---------- Frames: the original two-frame Flash loop, drawn once ---------- */
+  function drawFrame(invert, hop, reduced) {
+    var W = 640, H = 480, c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    var g = c.getContext('2d');
+    var bg = invert ? (reduced ? '#2b2b2b' : '#000') : (reduced ? '#e6e6e6' : '#fff');
+    var ink = invert ? (reduced ? '#d9d9d9' : '#fff') : (reduced ? '#262626' : '#000');
+    g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    g.fillStyle = ink; g.strokeStyle = ink;
+    g.font = '92px ' + getComputedStyle(document.documentElement).getPropertyValue('--font-meme');
+    g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+    g.fillText('you are an idiot', W / 2, 212);
+    var xs = [160, 320, 480], baseY = 340, dy = reduced ? 0 : 14;
+    for (var i = 0; i < 3; i++) {
+      var y = baseY + (i === 1 ? hop : -hop) * dy, x = xs[i];
+      g.lineWidth = 7; g.lineCap = 'round';
+      g.beginPath(); g.arc(x, y, 48, 0, Math.PI * 2); g.stroke();
+      g.beginPath(); g.arc(x - 18, y - 14, 7, 0, Math.PI * 2); g.fill();
+      g.beginPath(); g.arc(x + 18, y - 14, 7, 0, Math.PI * 2); g.fill();
+      g.lineWidth = 6.5;
+      g.beginPath(); g.arc(x, y + 4, 28, Math.PI * 0.18, Math.PI * 0.82); g.stroke();
+    }
+    return 'url("' + c.toDataURL('image/png') + '")';
+  }
+  function buildFrames(reduced) {
+    desktop.style.setProperty('--frame-a', drawFrame(false, 1, reduced));
+    desktop.style.setProperty('--frame-b', drawFrame(true, -1, reduced));
+  }
+
+  /* ---------- Audio: choir "you are an idiot" + laugh, synthesized ---------- */
+  var AC = null, master = null, noiseBuf = null, loopTimer = 0, nextLoop = 0;
+  var LOOP = 4.2;
+  var VOWELS = { u: [300, 870, 2240], a: [730, 1090, 2440], ae: [660, 1720, 2410], ih: [390, 1990, 2550], ee: [270, 2290, 3010], aw: [570, 840, 2410] };
+  var N = { A3: 220, B3: 246.94, Cs4: 277.18, D4: 293.66, E4: 329.63 };
+
+  function initAudio() {
+    var Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return false;
+    AC = new Ctx();
+    master = AC.createGain(); master.gain.value = S.muted ? 0 : 0.9;
+    var comp = AC.createDynamicsCompressor(); comp.threshold.value = -18; comp.ratio.value = 6;
+    master.connect(comp); comp.connect(AC.destination);
+    noiseBuf = AC.createBuffer(1, AC.sampleRate, AC.sampleRate);
+    var d = noiseBuf.getChannelData(0);
+    for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    return true;
+  }
+  function sing(freq, vowel, t, dur, o) {
+    o = o || {};
+    var attack = o.attack || 0.05, release = o.release || 0.09, gain = o.gain || 0.5;
+    var out = AC.createGain();
+    out.gain.setValueAtTime(0.0001, t);
+    out.gain.linearRampToValueAtTime(gain, t + attack);
+    out.gain.setValueAtTime(gain, Math.max(t + attack, t + dur - release));
+    out.gain.linearRampToValueAtTime(0.0001, t + dur);
+    out.connect(master);
+    var f = VOWELS[vowel], mix = [1, 0.55, 0.28], filters = [];
+    for (var i = 0; i < 3; i++) {
+      var bp = AC.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = f[i]; bp.Q.value = i === 0 ? 4.5 : 7;
+      var g = AC.createGain(); g.gain.value = mix[i];
+      bp.connect(g); g.connect(out); filters.push(bp);
+    }
+    var lfo = AC.createOscillator(); lfo.frequency.value = 5.6;
+    var lfoG = AC.createGain(); lfoG.gain.value = freq * 0.012; lfo.connect(lfoG);
+    var det = [-14, -5, 6, 15];
+    for (var k = 0; k < det.length; k++) {
+      var osc = AC.createOscillator(); osc.type = 'sawtooth'; osc.frequency.value = freq; osc.detune.value = det[k];
+      lfoG.connect(osc.frequency);
+      var pre = AC.createGain(); pre.gain.value = 0.3; osc.connect(pre);
+      for (var j = 0; j < 3; j++) pre.connect(filters[j]);
+      osc.start(t); osc.stop(t + dur + 0.05);
+    }
+    lfo.start(t); lfo.stop(t + dur + 0.05);
+    if (o.breath) {
+      var src = AC.createBufferSource(); src.buffer = noiseBuf;
+      var nb = AC.createBiquadFilter(); nb.type = 'bandpass'; nb.frequency.value = 1400; nb.Q.value = 0.9;
+      var ng = AC.createGain();
+      ng.gain.setValueAtTime(0.0001, t); ng.gain.linearRampToValueAtTime(0.22, t + 0.012); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
+      src.connect(nb); nb.connect(ng); ng.connect(master);
+      src.start(t); src.stop(t + 0.12);
+    }
+  }
+  function chord(freq, vowel, t, dur, gain, rel) {
+    sing(freq, vowel, t, dur, { gain: gain, release: rel });
+    sing(freq * 1.5, vowel, t, dur, { gain: gain * 0.32, release: rel });
+    sing(freq * 0.5, vowel, t, dur, { gain: gain * 0.4, release: rel });
+  }
+  function playLoop(t) {
+    chord(N.A3, 'u', t + 0.00, 0.32, 0.5, 0.06);
+    chord(N.B3, 'a', t + 0.32, 0.28, 0.5, 0.06);
+    chord(N.Cs4, 'ae', t + 0.60, 0.24, 0.5, 0.05);
+    chord(N.E4, 'ih', t + 0.84, 0.36, 0.55, 0.06);
+    chord(N.D4, 'ee', t + 1.20, 0.20, 0.5, 0.05);
+    chord(N.B3, 'aw', t + 1.40, 0.56, 0.55, 0.18);
+    var laugh = [N.E4, N.Cs4, N.E4, N.Cs4, N.D4, N.B3, N.D4, N.B3, N.Cs4, N.A3, N.Cs4, N.A3];
+    for (var i = 0; i < laugh.length; i++) {
+      var ht = t + 2.05 + i * 0.16;
+      sing(laugh[i], 'a', ht, 0.14, { gain: 0.5, attack: 0.012, release: 0.06, breath: true });
+      sing(laugh[i] * 0.5, 'a', ht, 0.14, { gain: 0.18, attack: 0.012, release: 0.06 });
+    }
+  }
+  function startAudio() {
+    if (!AC && !initAudio()) return;
+    if (AC.state === 'suspended') AC.resume();
+    nextLoop = AC.currentTime + 0.08;
+    var tick = function () {
+      while (nextLoop - AC.currentTime < 1.5) { playLoop(nextLoop); nextLoop += LOOP; }
+    };
+    tick();
+    loopTimer = setInterval(tick, 500);
+  }
+  function stopAudio() {
+    clearInterval(loopTimer); loopTimer = 0;
+    if (AC) { try { AC.close(); } catch (e) {} AC = null; master = null; }
+  }
+  function setMuted(m) {
+    S.muted = m;
+    if (master) master.gain.setTargetAtTime(m ? 0 : 0.9, AC.currentTime, 0.02);
+    $('mute').setAttribute('aria-pressed', String(m));
+    $('mute').title = m ? 'Unmute' : 'Mute';
+    $('mute').setAttribute('aria-label', m ? 'Unmute' : 'Mute');
+    $('spk').style.opacity = m ? '0.25' : '1';
+    $('sm-mute').textContent = m ? 'Unmute sound' : 'Mute sound';
+  }
+
+  /* ---------- Windows: bounce, multiply, never close ---------- */
+  var ICON = '<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.3" fill="#fff" stroke="#000" stroke-width="1.6"/><circle cx="5.7" cy="6.4" r="1.1" fill="#000"/><circle cx="10.3" cy="6.4" r="1.1" fill="#000"/><path d="M5 9.6q3 2.6 6 0" fill="none" stroke="#000" stroke-width="1.4" stroke-linecap="round"/></svg>';
+
+  function bounds() {
+    var r = field.getBoundingClientRect();
+    return { w: r.width, h: r.height };
+  }
+  function spawn(count, near) {
+    var b = bounds();
+    for (var i = 0; i < count; i++) {
+      if (S.windows.length >= MAX_WINDOWS) break;
+      var el = document.createElement('div');
+      el.className = 'win';
+      el.innerHTML = '<div class="tbar">' + ICON + '<span class="ttl">You are an idiot</span>' +
+        '<span class="btns"><button type="button" class="min" title="Minimize" aria-label="Minimize">_</button>' +
+        '<button type="button" class="max" title="Maximize" aria-label="Maximize">&#9633;</button>' +
+        '<button type="button" class="cls" title="Close" aria-label="Close">&#10005;</button></span></div>' +
+        '<div class="screen" role="img" aria-label="you are an idiot, three smiling faces, flashing"></div>';
+      field.appendChild(el);
+      var w = el.offsetWidth, h = el.offsetHeight;
+      var x, y;
+      if (near) {
+        x = near.x + (Math.random() * 160 - 80); y = near.y + (Math.random() * 120 - 60);
+      } else {
+        x = Math.random() * Math.max(1, b.w - w); y = Math.random() * Math.max(1, b.h - h);
+      }
+      x = Math.min(Math.max(0, x), Math.max(0, b.w - w)); y = Math.min(Math.max(0, y), Math.max(0, b.h - h));
+      var speed = (S.reduced ? 60 : 110) + Math.random() * (S.reduced ? 50 : 120);
+      var ang = Math.random() * Math.PI * 2;
+      var win = { el: el, x: x, y: y, w: w, h: h, vx: Math.cos(ang) * speed, vy: Math.sin(ang) * speed };
+      if (Math.abs(win.vx) < 40) win.vx = 40 * (win.vx < 0 ? -1 : 1);
+      if (Math.abs(win.vy) < 30) win.vy = 30 * (win.vy < 0 ? -1 : 1);
+      el.style.transform = 'translate(' + x + 'px,' + y + 'px)';
+      S.windows.push(win);
+      (function (win) {
+        el.querySelector('.cls').addEventListener('click', function (e) { e.stopPropagation(); bump(win); spawn(2, win); });
+        el.querySelector('.min').addEventListener('click', function (e) { e.stopPropagation(); bump(win); spawn(1, win); });
+        el.querySelector('.max').addEventListener('click', function (e) { e.stopPropagation(); bump(win); spawn(1, win); });
+        el.addEventListener('pointerdown', function () { field.appendChild(el); });
+      })(win);
+    }
+    updateTasks();
+  }
+  function bump(win) {
+    win.vx *= -1.15; win.vy *= -1.15;
+    var lim = 420;
+    win.vx = Math.max(-lim, Math.min(lim, win.vx)); win.vy = Math.max(-lim, Math.min(lim, win.vy));
+  }
+  function step(ts) {
+    if (!S.running) return;
+    var dt = S.lastT ? Math.min(0.05, (ts - S.lastT) / 1000) : 0;
+    S.lastT = ts;
+    var b = bounds();
+    for (var i = 0; i < S.windows.length; i++) {
+      var w = S.windows[i];
+      w.x += w.vx * dt; w.y += w.vy * dt;
+      var mx = Math.max(0, b.w - w.w), my = Math.max(0, b.h - w.h);
+      if (w.x < 0) { w.x = 0; w.vx = Math.abs(w.vx); } else if (w.x > mx) { w.x = mx; w.vx = -Math.abs(w.vx); }
+      if (w.y < 0) { w.y = 0; w.vy = Math.abs(w.vy); } else if (w.y > my) { w.y = my; w.vy = -Math.abs(w.vy); }
+      w.el.style.transform = 'translate(' + w.x + 'px,' + w.y + 'px)';
+    }
+    S.raf = requestAnimationFrame(step);
+  }
+  function updateTasks() {
+    var n = S.windows.length;
+    tasks.innerHTML = n ? '<div class="tbtn">' + ICON + '<span>' + (n > 1 ? '(' + n + ') ' : '') + 'You are an idiot</span></div>' : '';
+  }
+  function flashToggle() {
+    S.phase ^= 1;
+    desktop.classList.toggle('phase-b', S.phase === 1);
+  }
+
+  /* ---------- Lifecycle ---------- */
+  function run() {
+    S.reduced = reduceBox.checked;
+    buildFrames(S.reduced);
+    dim.hidden = true; exeicon.hidden = true; off.hidden = true;
+    S.running = true; S.lastT = 0; S.phase = 0;
+    desktop.classList.remove('phase-b');
+    clearInterval(S.flashTimer);
+    S.flashTimer = setInterval(flashToggle, S.reduced ? 700 : 170);
+    startAudio();
+    if (!S.windows.length) spawn(1);
+    cancelAnimationFrame(S.raf);
+    S.raf = requestAnimationFrame(step);
+  }
+  function stopAll() {
+    S.running = false;
+    cancelAnimationFrame(S.raf); S.raf = 0;
+    clearInterval(S.flashTimer); S.flashTimer = 0;
+    stopAudio();
+    for (var i = 0; i < S.windows.length; i++) field.removeChild(S.windows[i].el);
+    S.windows = [];
+    desktop.classList.remove('phase-b');
+    updateTasks();
+  }
+  function shutDown() {
+    stopAll();
+    closeStart();
+    dim.hidden = true;
+    off.hidden = false;
+    $('reboot').focus();
+  }
+  function showDialog() {
+    off.hidden = true; closeStart();
+    dim.hidden = false;
+    $('run').focus();
+  }
+  function openStart() { startmenu.hidden = false; $('start').setAttribute('aria-expanded', 'true'); }
+  function closeStart() { startmenu.hidden = true; $('start').setAttribute('aria-expanded', 'false'); }
+
+  $('run').addEventListener('click', run);
+  $('cancel').addEventListener('click', function () { dim.hidden = true; exeicon.hidden = false; exeicon.focus(); });
+  exeicon.addEventListener('click', showDialog);
+  $('reboot').addEventListener('click', showDialog);
+  $('start').addEventListener('click', function (e) { e.stopPropagation(); startmenu.hidden ? openStart() : closeStart(); });
+  $('sm-off').addEventListener('click', shutDown);
+  $('sm-run').addEventListener('click', function () { closeStart(); if (S.running) spawn(1); else showDialog(); });
+  $('sm-mute').addEventListener('click', function () { closeStart(); setMuted(!S.muted); });
+  $('mute').addEventListener('click', function () { setMuted(!S.muted); });
+  document.addEventListener('click', function (e) { if (!startmenu.hidden && !startmenu.contains(e.target)) closeStart(); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { if (!startmenu.hidden) closeStart(); else if (S.running) shutDown(); }
+  });
+  window.addEventListener('resize', function () {
+    for (var i = 0; i < S.windows.length; i++) { S.windows[i].w = S.windows[i].el.offsetWidth; S.windows[i].h = S.windows[i].el.offsetHeight; }
+  });
+  document.addEventListener('visibilitychange', function () {
+    if (!AC) return;
+    if (document.hidden) { if (master) master.gain.setTargetAtTime(0, AC.currentTime, 0.02); }
+    else if (!S.muted && master) master.gain.setTargetAtTime(0.9, AC.currentTime, 0.02);
+  });
+
+  function clock() {
+    var d = new Date(), h = d.getHours(), m = d.getMinutes();
+    var ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+    $('clock').textContent = h + ':' + (m < 10 ? '0' : '') + m + ' ' + ap;
+  }
+  clock(); setInterval(clock, 15000);
+
+  buildFrames(false);
+  $('run').focus();
+})();
+</script>
+<!-- END ARTIFACT -->
+</body>
+</html>
