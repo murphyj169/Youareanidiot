@@ -130,14 +130,27 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
 .field .ico svg { width: 16px; height: 16px; display: block; }
 .lnk { display: flex; align-items: center; gap: 3px; padding: 1px 5px; white-space: nowrap; }
 .lnk svg { width: 16px; height: 16px; display: block; }
-#ie .content { flex: 1; min-height: 0; margin-top: 2px; background: var(--page); box-shadow: var(--sunken); display: flex; align-items: flex-start; justify-content: center; padding: 6px 4px; overflow: hidden; }
-#ie .mv { width: auto; height: 96%; max-width: none; }
+#ie .content { flex: 1; min-height: 0; margin-top: 2px; background: var(--page); box-shadow: var(--sunken); display: flex; align-items: flex-start; justify-content: center; padding: 8px 4px; overflow: hidden; }
+#ie .mv { width: auto; height: 82%; max-width: none; box-shadow: 0 0 0 2px var(--dark); }
 
 /* Message box: "You are an idiot!" */
 .msg { width: 230px; }
 .msg .mb { display: flex; align-items: center; gap: 14px; padding: 12px 12px 8px 14px; }
 .msg .mb svg { width: 32px; height: 32px; flex: none; display: block; }
-.msg .ok { display: flex; justify-content: center; padding: 4px 0 8px; }
+.msg .ok { display: flex; justify-content: center; gap: 6px; padding: 4px 0 8px; }
+.msg.busy { width: 360px; }
+.msg.busy .mb { align-items: flex-start; line-height: 1.35; }
+
+/* Shut Down Windows: the screen dims with a 50% dither behind the dialog */
+#shut { position: absolute; inset: 0; z-index: 75; display: flex; align-items: center; justify-content: center;
+  background: repeating-conic-gradient(rgba(0,0,0,.55) 0 25%, transparent 0 50%) 0 0 / 2px 2px; }
+#shut .w98 { position: relative; width: 330px; }
+#shut .sb { display: flex; gap: 14px; padding: 12px 12px 6px; }
+#shut .sb svg { width: 32px; height: 32px; display: block; }
+#shut .opts { display: flex; flex-direction: column; gap: 6px; }
+#shut label { display: flex; gap: 6px; align-items: center; }
+#shut input { margin: 0; accent-color: var(--navy); }
+#shut .acts { display: flex; justify-content: flex-end; gap: 6px; padding: 6px 10px 10px; }
 
 .btn98 {
   min-width: 75px; height: 23px; padding: 0 10px; border: 0; background: var(--face); box-shadow: var(--raised);
@@ -379,7 +392,7 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
         <button class="btn98" type="button" id="cancel">Cancel</button>
         <button class="btn98" type="button" id="more">More Info</button>
       </div>
-      <p class="note">Trying to close the program will not go well. The slowdown and crash happen only inside this page. Press Esc or use Start &gt; Shut Down to stop it.</p>
+      <p class="note">Trying to close the program will not go well. The slowdown and crash happen only inside this page. Press Esc or the monitor's power button to stop it at any time.</p>
     </div>
   </div>
 </div>
@@ -393,6 +406,22 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
       <p class="ind">*&nbsp;Press CTRL+ALT+DEL again to restart your computer. You will lose any unsaved information in all applications.</p>
     </div>
     <p class="cont">Press any key to continue <span class="cur">_</span></p>
+  </div>
+</div>
+
+<div id="shut" hidden>
+  <div class="w98 active" id="shut-dlg" role="dialog" aria-labelledby="shut-title" aria-modal="true">
+    <div class="ttlbar"><span class="ttl" id="shut-title">Shut Down Windows</span><span class="btns"><button type="button" class="cls" id="shut-x" aria-label="Close"></button></span></div>
+    <div class="sb">
+      <span data-icon="my-computer"></span>
+      <div class="opts">
+        <span>What do you want the computer to do?</span>
+        <label><input type="radio" name="sd" id="sd-off" checked> Shut down</label>
+        <label><input type="radio" name="sd" id="sd-re"> Restart</label>
+        <label><input type="radio" name="sd" id="sd-dos"> Restart in MS-DOS mode</label>
+      </div>
+    </div>
+    <div class="acts"><button class="btn98 default" type="button" id="shut-ok">OK</button><button class="btn98" type="button" id="shut-cancel">Cancel</button></div>
   </div>
 </div>
 
@@ -426,7 +455,7 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
   var $ = function (id) { return document.getElementById(id); };
   var desktop = $('desktop'), field = $('field'), tasks = $('tasks');
   var dim = $('dim'), off = $('off'), blackout = $('blackout'), bsod = $('bsod'), startmenu = $('startmenu'), exeicon = $('exeicon');
-  var ieWin = $('ie');
+  var ieWin = $('ie'), shut = $('shut');
   var reduceBox = $('reduce');
   var S = { z: 10, running: false, crashing: false, stage: 0, reduced: false, muted: false, windows: [], alerts: [], active: null, frames: null,
     raf: 0, autoTimer: 0, stutterTimer: 0, firstTimer: 0, crashT1: 0, crashT2: 0, crashT3: 0, lastT: 0, lastApply: 0, hitchUntil: 0, ieBorn: 0, ieInv: false, scale: 1 };
@@ -708,7 +737,7 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
   /* ---------- Stages: running, trails, hung, crash ----------
      Everything is simulated. Nothing here loads the device: the "lag" is throttled
      redraws and deliberate pauses, and the trails are stale copies painted on one canvas. */
-  var STAGE1_AT = 8, STAGE2_AT = 20, MAX_WINDOWS = 44;
+  var STAGE1_AT = 8, STAGE2_AT = 20, MAX_WINDOWS = 56, BUSY_AT = 40;
   function updateStage() {
     if (!S.running || S.crashing) return;
     var n = S.windows.length;
@@ -721,6 +750,7 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
       scheduleStutter();
     }
     syncLayers();
+    if (n >= BUSY_AT && !S.busyShown) { S.busyShown = true; alertBox(S.windows[n - 1], 'busy'); }
   }
   function scheduleAuto() {
     clearTimeout(S.autoTimer);
@@ -729,7 +759,7 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
     S.autoTimer = setTimeout(function () {
       if (S.windows.length) spawn(1, S.windows[Math.floor(Math.random() * S.windows.length)]);
       scheduleAuto();
-    }, S.stage === 0 ? 5200 : S.stage === 1 ? 2100 : 850);
+    }, S.stage === 0 ? 5200 : S.stage === 1 ? 2100 : 1000);
   }
   function scheduleStutter() {
     clearTimeout(S.stutterTimer);
@@ -790,7 +820,7 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
   function wirePopup(win) {
     var el = win.el;
     el.querySelector('.cls').addEventListener('click', function (e) {
-      e.stopPropagation(); later(function () { bump(win); alertBox(win); spawn(2, win); });
+      e.stopPropagation(); later(function () { bump(win); alertBox(win, S.stage >= 2 ? 'busy' : 'idiot'); spawn(2, win); });
     });
     el.querySelector('.min').addEventListener('click', function (e) { e.stopPropagation(); later(function () { bump(win); spawn(1, win); }); });
     el.querySelector('.max').addEventListener('click', function (e) { e.stopPropagation(); later(function () { bump(win); spawn(1, win); }); });
@@ -805,15 +835,20 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
   }
 
   /* ---------- "You are an idiot!" message boxes ---------- */
-  function alertBox(near) {
+  var BUSY_ICON = '<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16.5" cy="16.5" r="13" fill="#808080"/><circle cx="15" cy="15" r="13" fill="#ff0000" stroke="#800000"/><path d="M10 10l10 10M20 10L10 20" stroke="#fff" stroke-width="3.2" stroke-linecap="square"/></svg>';
+  function alertBox(near, kind) {
     if (!S.running || S.crashing) return;
     if (S.alerts.length >= 6) { S.alerts[0].el.style.zIndex = ++S.z; return; }
+    var busy = kind === 'busy';
     var el = document.createElement('div');
-    el.className = 'w98 msg';
+    el.className = 'w98 msg' + (busy ? ' busy' : '');
     el.setAttribute('role', 'alertdialog');
     el.innerHTML = '<div class="ttlbar"><span class="ttl">Microsoft Internet Explorer</span><span class="btns"><button type="button" class="cls" aria-label="Close"></button></span></div>' +
-      '<div class="mb"><span data-icon="warning"></span><span>You are an idiot!</span></div>' +
-      '<div class="ok"><button type="button" class="btn98 default">OK</button></div>';
+      (busy
+        ? '<div class="mb"><span>' + BUSY_ICON + '</span><span>This browser window (or ActiveX control in this page) is busy. Closing this window may cause some problems.<br><br>Do you want to close it anyway?</span></div>' +
+          '<div class="ok"><button type="button" class="btn98 default">OK</button><button type="button" class="btn98 alt">Cancel</button></div>'
+        : '<div class="mb"><span data-icon="warning"></span><span>You are an idiot!</span></div>' +
+          '<div class="ok"><button type="button" class="btn98 default">OK</button></div>');
     paintIcons(el);
     field.appendChild(el);
     var b = bounds(), w = el.offsetWidth, h = el.offsetHeight;
@@ -834,6 +869,7 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
       });
     };
     el.querySelector('.ok button').addEventListener('click', dismiss);
+    if (busy) el.querySelector('.ok .alt').addEventListener('click', dismiss);   /* neither answer closes anything */
     el.querySelector('.cls').addEventListener('click', dismiss);
     el.addEventListener('pointerdown', function () { if (S.stage < 2) activate(el); });
   }
@@ -855,7 +891,8 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
     sg.fillStyle = '#808080'; sg.fillRect(x + ww - 2, y + 1, 1, hh - 2); sg.fillRect(x + 1, y + hh - 2, ww - 2, 1);
     /* title bar */
     var g = sg.createLinearGradient(x + 3, 0, x + ww - 3, 0);
-    g.addColorStop(0, '#808080'); g.addColorStop(1, '#b5b5b5');
+    if (w.el === S.active) { g.addColorStop(0, '#000080'); g.addColorStop(1, '#1084d0'); }
+    else { g.addColorStop(0, '#808080'); g.addColorStop(1, '#b5b5b5'); }
     sg.fillStyle = g; sg.fillRect(x + 3, y + 3, ww - 6, tb);
     sg.fillStyle = '#c0c0c0'; sg.fillRect(x + ww - 21, y + 5, 16, 14);
     sg.fillStyle = '#000000'; sg.fillRect(x + ww - 6, y + 5, 1, 14); sg.fillRect(x + ww - 21, y + 18, 16, 1);
@@ -938,7 +975,8 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
     S.raf = requestAnimationFrame(step);
   }
   function stopAll() {
-    S.running = false; S.crashing = false; S.stage = 0;
+    S.running = false; S.crashing = false; S.stage = 0; S.busyShown = false;
+    shut.hidden = true; $('shut-dlg').hidden = false; S.shutBusy = false;
     clearTimers();
     stopAudio();
     var i;
@@ -962,6 +1000,7 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
   function crash() {
     if (S.crashing) return;
     S.crashing = true;
+    shut.hidden = true;
     clearTimers();                       /* freeze on the current frame */
     desktop.classList.add('hung');
     setLed('busy');
@@ -1008,7 +1047,28 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
   exeicon.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); showDialog(); } });
   $('reboot').addEventListener('click', showDialog);
   $('start').addEventListener('click', function (e) { e.stopPropagation(); startmenu.hidden ? openStart() : closeStart(); });
-  $('sm-off').addEventListener('click', shutDown);
+  /* Start > Shut Down: the screen dims behind the dialog, as in Windows 98. While the
+     system is hung it just sits there and gives up, as in the video. Esc and the monitor's
+     power button always stop everything. */
+  function openShut() {
+    closeStart();
+    shut.hidden = false; S.shutBusy = false;
+    $('shut-ok').focus();
+  }
+  function closeShut() { shut.hidden = true; S.shutBusy = false; desktop.classList.toggle('hung', S.running && S.stage >= 2); }
+  $('sm-off').addEventListener('click', openShut);
+  $('shut-cancel').addEventListener('click', closeShut);
+  $('shut-x').addEventListener('click', closeShut);
+  $('shut-ok').addEventListener('click', function () {
+    if (S.shutBusy) return;
+    if (!S.running || S.stage < 2) { shut.hidden = true; shutDown(); return; }
+    S.shutBusy = true; desktop.classList.add('hung');
+    $('shut-dlg').hidden = true;
+    setTimeout(function () {
+      $('shut-dlg').hidden = false; closeShut();
+      if (S.running && !S.crashing) spawn(2, S.windows[S.windows.length - 1]);
+    }, 3500);
+  });
   $('sm-run').addEventListener('click', function () { closeStart(); if (S.running) spawn(1, S.windows[0] || null); else showDialog(); });
   $('sm-mute').addEventListener('click', function () { closeStart(); setMuted(!S.muted); });
   $('mute').addEventListener('click', function () { setMuted(!S.muted); });
@@ -1022,7 +1082,7 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
   document.addEventListener('click', function (e) { if (!startmenu.hidden && !startmenu.contains(e.target)) closeStart(); });
   document.addEventListener('keydown', function (e) {
     if (!bsod.hidden) { e.preventDefault(); endCrash(); return; }   /* "Press any key to continue" */
-    if (e.key === 'Escape') { if (!startmenu.hidden) closeStart(); else if (S.running) shutDown(); }
+    if (e.key === 'Escape') { if (!startmenu.hidden) closeStart(); else if (!shut.hidden && !S.shutBusy) closeShut(); else if (S.running) { shut.hidden = true; shutDown(); } }
   });
   window.addEventListener('resize', function () { fit(); });
   document.addEventListener('visibilitychange', function () {

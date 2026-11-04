@@ -27,13 +27,17 @@ The run follows the meme videos, driven by how many windows are open:
 2. **Bugging (8+ windows).** Closing a window spawns smaller ones. The desktop stops
    repainting, so windows leave staircase trails. Motion turns choppy, and a second copy
    of the phrase starts overlapping.
-3. **Hung (20+ windows).** The cursor turns to an hourglass, the clock stops, and clicks answer late. More copies of the phrase pile up, and the
+3. **Hung (20+ windows).** Trails take over the whole screen. The cursor turns to an hourglass, the clock stops, and clicks answer late. More copies of the phrase pile up, and the
    sound skips and stutters.
-4. **Crash (44 windows).** Everything freezes and the sound sticks into a looping buzz that
+   Closing a window now brings up Internet Explorer's "This browser window ... is busy"
+   box, which also appears on its own at 40 windows. Start > Shut Down dims the screen
+   and then gives up, as in the video.
+4. **Crash (56 windows).** Everything freezes and the sound sticks into a looping buzz that
    carries on behind a Windows 98 blue screen. Any key ends it, then the screen shows
    "It's now safe to turn off your computer."
 
 Every effect is simulated inside the page. It opens no real windows and puts no real load
 on the device: the lag is throttled redraws and deliberate pauses.
 
-Press Esc, or use Start > Turn Off Computer, to stop it at any point.
+Press Esc, or the monitor's power button, to stop it at any point. Start > Shut Down works
+only until the system hangs.
