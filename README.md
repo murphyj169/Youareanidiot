@@ -17,18 +17,26 @@ made for landscape. On a phone, turn it sideways and tap Full screen on the moni
 supported browsers also lock to landscape. The bezel's power button turns the monitor off
 and on, and its LED blinks amber while the system is hung.
 
-It starts with a Windows 98 "File Download" dialog, which also carries the photosensitivity and sound warning and a reduced-flashing option.
+Every step is driven by you:
+
+1. Double-click `idiot.exe` on the desktop (a single tap on touch screens).
+2. A "File Download" dialog asks to run or save it. It also carries the flashing and sound
+   warning and a reduced-flashing option.
+3. Setup walks through Welcome, a license you must accept, an install progress bar, and
+   Finish, which launches the program. Afterwards the icon runs it directly.
+4. Close windows with their title-bar buttons, the Delete key, the message boxes' OK and
+   Cancel, or bring them forward from the taskbar. None of it goes well.
+5. Try Start > Shut Down, press any key on the blue screen, then Restart.
 
 ## How it plays out
 
 The run follows the meme videos, driven by how many windows are open:
 
 1. **Normal.** Internet Explorer plays the page, then four popups appear. A window bounces and "you are an idiot, ha ha ha ha" repeats on a 5 s loop.
-2. **Bugging (8+ windows).** Closing a window spawns smaller ones. The desktop stops
-   repainting, so windows leave staircase trails. Motion turns choppy, and a second copy
-   of the phrase starts overlapping.
-3. **Hung (20+ windows).** Trails take over the whole screen. The cursor turns to an hourglass, the clock stops, and clicks answer late. More copies of the phrase pile up, and the
-   sound skips and stutters.
+2. **Bugging (8+ windows).** The desktop stops repainting, so windows leave staircase
+   trails, motion turns choppy, and more windows open on their own.
+3. **Hung (20+ windows).** Trails take over the whole screen. The cursor turns to an hourglass, the clock stops, and clicks answer late. A second and third copy of the phrase
+   start overlapping, and the sound skips and stutters.
    Closing a window now brings up Internet Explorer's "This browser window ... is busy"
    box, which also appears on its own at 40 windows. Start > Shut Down dims the screen
    and then gives up, as in the video.

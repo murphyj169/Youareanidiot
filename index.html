@@ -178,6 +178,7 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
 #quick svg { width: 16px; height: 16px; display: block; }
 #tasks { flex: 1; min-width: 0; display: flex; gap: 3px; overflow: hidden; }
 .tbtn {
+  cursor: default; border: 0; text-align: left;
   flex: 0 1 160px; min-width: 22px; display: flex; align-items: center; gap: 3px; padding: 0 4px 0 3px;
   background: var(--face); box-shadow: var(--raised); white-space: nowrap; overflow: hidden;
 }
@@ -220,6 +221,28 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
 .dlg .warn svg { width: 20px; height: 20px; flex: none; display: block; }
 .dlg .acts { display: flex; justify-content: flex-end; gap: 6px; flex-wrap: wrap; padding-top: 2px; }
 .dlg .note { color: #404040; }
+
+/* ---------- Setup wizard ---------- */
+.setup { position: relative; width: 100%; max-width: 470px; }
+.su-body { display: flex; gap: 12px; padding: 10px 10px 0; }
+.su-side { width: 110px; flex: none; min-height: 230px; background: linear-gradient(180deg, var(--navy-2), var(--navy)); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 14px; box-shadow: var(--thin-sunken); }
+.su-side svg { width: 64px; height: 64px; display: block; }
+.su-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.step { display: flex; flex-direction: column; gap: 8px; line-height: 1.35; }
+.step h2 { margin: 0 0 2px; font: 700 13px/1.2 var(--font-ui); }
+.step p { margin: 0; }
+.step label { display: flex; gap: 6px; align-items: center; }
+.step input { margin: 0; accent-color: var(--navy); }
+.eula { height: 96px; overflow: auto; white-space: pre-wrap; background: var(--page); box-shadow: var(--sunken); padding: 4px 6px; -webkit-user-select: text; user-select: text; }
+.mono { font-family: "Courier New", monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prog { height: 18px; padding: 2px; box-sizing: border-box; background: var(--page); box-shadow: var(--sunken); }
+.prog span { display: block; height: 100%; width: 0; background: repeating-linear-gradient(90deg, var(--navy) 0 8px, transparent 8px 10px); }
+.su-acts { display: flex; justify-content: flex-end; gap: 4px; padding: 10px; margin-top: 10px; box-shadow: inset 0 1px var(--shadow), inset 0 2px var(--hilite); }
+.btn98:disabled { color: var(--shadow); text-shadow: 1px 1px var(--hilite); }
+
+/* Win98 tooltip */
+.tip { position: absolute; left: 160px; top: 146px; z-index: 4; padding: 2px 5px; background: #ffffe1; border: 1px solid var(--dark); white-space: nowrap; }
+.tip::before { content: ""; position: absolute; left: -7px; top: 6px; border: 3px solid transparent; border-right: 4px solid var(--dark); }
 
 /* ---------- Crash: blue screen, then the shutdown screen ---------- */
 #bsod {
@@ -310,11 +333,12 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
       <div class="dicon"><span class="pic" data-icon="recycle-bin"></span><span class="lbl">Recycle Bin</span></div>
       <div class="dicon"><span class="pic" data-icon="online-services"></span><span class="lbl">Online Services</span></div>
       <div class="dicon"><span class="pic" data-icon="outlook-express"></span><span class="lbl">Outlook Express</span></div>
-      <button class="dicon" id="exeicon" type="button" title="Open idiot.exe" hidden>
+      <button class="dicon" id="exeicon" type="button" title="Double-click to open idiot.exe">
         <span class="pic"><svg viewBox="0 0 32 32" aria-hidden="true" shape-rendering="crispEdges"><path d="M5 3h17l5 5v21H5z" fill="#fff" stroke="#000"/><path d="M22 3v5h5" fill="#c0c0c0" stroke="#000"/><circle cx="16" cy="18" r="7" fill="#fff" stroke="#000" stroke-width="1.6" shape-rendering="auto"/><circle cx="13.6" cy="16" r="1.2"/><circle cx="18.4" cy="16" r="1.2"/><path d="M12.3 19.6q3.7 3.3 7.4 0" fill="none" stroke="#000" stroke-width="1.5" stroke-linecap="round" shape-rendering="auto"/></svg></span>
-        <span class="lbl">idiot.exe</span>
+        <span class="lbl" id="exe-lbl">idiot.exe</span>
       </button>
     </div>
+    <div class="tip" id="tip" role="status">Double-click <b>idiot.exe</b> to run it.</div>
     <div class="w98" id="ie" hidden>
       <div class="ttlbar"><span class="ico" data-icon="ie-small"></span><span class="ttl">C:\WINDOWS\Desktop\idiot.html - Microsoft Internet Explorer</span>
         <span class="btns"><button type="button" class="min" aria-label="Minimize"></button><button type="button" class="max" aria-label="Maximize"></button><button type="button" class="cls" aria-label="Close"></button></span></div>
@@ -367,8 +391,8 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
   </div>
 </div>
 
-<div id="dim">
-  <div class="w98 dlg active" role="dialog" aria-labelledby="dlg-title" aria-modal="true">
+<div id="dim" hidden>
+  <div class="w98 dlg active" id="dl" role="dialog" aria-labelledby="dlg-title" aria-modal="true">
     <div class="ttlbar"><span class="ttl" id="dlg-title">File Download</span>
       <span class="btns"><button type="button" class="cls" id="dlg-x" aria-label="Close"></button></span></div>
     <div class="body">
@@ -393,6 +417,54 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
         <button class="btn98" type="button" id="more">More Info</button>
       </div>
       <p class="note">Trying to close the program will not go well. The slowdown and crash happen only inside this page. Press Esc or the monitor's power button to stop it at any time.</p>
+    </div>
+  </div>
+  <div class="w98 setup active" id="setup" role="dialog" aria-labelledby="su-title" aria-modal="true" hidden>
+    <div class="ttlbar"><span class="ico" data-icon="ie-small"></span><span class="ttl" id="su-title">You Are An Idiot Setup</span>
+      <span class="btns"><button type="button" class="cls" id="su-x" aria-label="Close"></button></span></div>
+    <div class="su-body">
+      <div class="su-side" aria-hidden="true">
+        <svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="24" fill="#fff" stroke="#000" stroke-width="4"/><circle cx="24" cy="26" r="3.6"/><circle cx="40" cy="26" r="3.6"/><path d="M19 37q13 12 26 0" fill="none" stroke="#000" stroke-width="4" stroke-linecap="round"/></svg>
+      </div>
+      <div class="su-main">
+        <div class="step" data-step="0">
+          <h2>Welcome</h2>
+          <p>Welcome to the You Are An Idiot Setup program. This program will install You Are An Idiot on your computer.</p>
+          <p>It is strongly recommended that you exit all Windows programs before running this Setup program.</p>
+          <p>Click Next to continue, or Cancel to exit Setup.</p>
+        </div>
+        <div class="step" data-step="1" hidden>
+          <h2>License Agreement</h2>
+          <p>Please read the following license agreement.</p>
+          <div class="eula" tabindex="0">YOU ARE AN IDIOT END USER LICENSE AGREEMENT
+
+1. By installing this software you agree that you are an idiot.
+2. Closing a window opens more windows. This is not a defect.
+3. The laughter cannot be turned off from inside the program.
+4. The publisher could not be verified. Neither can your judgment.
+5. This agreement is a joke. Nothing on your real computer is touched: every window, slowdown and crash happens inside this page.</div>
+          <label><input type="radio" name="eula" id="eula-yes"> I accept the agreement</label>
+          <label><input type="radio" name="eula" id="eula-no" checked> I do not accept the agreement</label>
+        </div>
+        <div class="step" data-step="2" hidden>
+          <h2>Installing</h2>
+          <p>Please wait while Setup installs You Are An Idiot on your computer.</p>
+          <p class="mono" id="su-file">Copying files...</p>
+          <div class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="su-prog"><span id="su-bar"></span></div>
+          <p id="su-pct">0%</p>
+        </div>
+        <div class="step" data-step="3" hidden>
+          <h2>Setup Complete</h2>
+          <p>Setup has finished installing You Are An Idiot on your computer.</p>
+          <label><input type="checkbox" id="su-launch" checked> Launch You Are An Idiot now</label>
+          <p>Click Finish to exit Setup.</p>
+        </div>
+      </div>
+    </div>
+    <div class="su-acts">
+      <button class="btn98" type="button" id="su-back">&lt; Back</button>
+      <button class="btn98 default" type="button" id="su-next">Next &gt;</button>
+      <button class="btn98" type="button" id="su-cancel" style="margin-left:8px">Cancel</button>
     </div>
   </div>
 </div>
@@ -455,10 +527,10 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
   var $ = function (id) { return document.getElementById(id); };
   var desktop = $('desktop'), field = $('field'), tasks = $('tasks');
   var dim = $('dim'), off = $('off'), blackout = $('blackout'), bsod = $('bsod'), startmenu = $('startmenu'), exeicon = $('exeicon');
-  var ieWin = $('ie'), shut = $('shut');
+  var ieWin = $('ie'), shut = $('shut'), tip = $('tip');
   var reduceBox = $('reduce');
   var S = { z: 10, running: false, crashing: false, stage: 0, reduced: false, muted: false, windows: [], alerts: [], active: null, frames: null,
-    raf: 0, autoTimer: 0, stutterTimer: 0, firstTimer: 0, crashT1: 0, crashT2: 0, crashT3: 0, lastT: 0, lastApply: 0, hitchUntil: 0, ieBorn: 0, ieInv: false, scale: 1 };
+    raf: 0, autoTimer: 0, stutterTimer: 0, firstTimer: 0, crashT1: 0, crashT2: 0, crashT3: 0, lastT: 0, lastApply: 0, hitchUntil: 0, setupTimer: 0, installed: false, ieBorn: 0, ieInv: false, scale: 1 };
 
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) reduceBox.checked = true;
 
@@ -838,8 +910,9 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
   var BUSY_ICON = '<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16.5" cy="16.5" r="13" fill="#808080"/><circle cx="15" cy="15" r="13" fill="#ff0000" stroke="#800000"/><path d="M10 10l10 10M20 10L10 20" stroke="#fff" stroke-width="3.2" stroke-linecap="square"/></svg>';
   function alertBox(near, kind) {
     if (!S.running || S.crashing) return;
-    if (S.alerts.length >= 6) { S.alerts[0].el.style.zIndex = ++S.z; return; }
     var busy = kind === 'busy';
+    var same = S.alerts.filter(function (x) { return x.busy === busy; });
+    if (same.length >= (busy ? 3 : 6)) { same[0].el.style.zIndex = ++S.z; return; }
     var el = document.createElement('div');
     el.className = 'w98 msg' + (busy ? ' busy' : '');
     el.setAttribute('role', 'alertdialog');
@@ -855,7 +928,7 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
     var x = near ? near.x + near.w / 2 - w / 2 + (Math.random() * 60 - 30) : (b.w - w) / 2;
     var y = near ? near.y + near.h / 2 - h / 2 + (Math.random() * 40 - 20) : (b.h - h) / 2;
     x = Math.min(Math.max(0, x), Math.max(0, b.w - w)); y = Math.min(Math.max(0, y), Math.max(0, b.h - h));
-    var box = { el: el, x: x, y: y, w: w, h: h };
+    var box = { el: el, x: x, y: y, w: w, h: h, busy: busy };
     el.style.transform = 'translate(' + Math.round(x) + 'px,' + Math.round(y) + 'px)';
     S.alerts.push(box);
     activate(el);                         /* the video has no system sound on these boxes */
@@ -945,9 +1018,9 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
   }
   function updateTasks() {
     if (!S.running) { tasks.innerHTML = ''; return; }
-    var html = '<div class="tbtn' + (S.active === ieWin ? ' cur' : '') + '">' + W98['ie-small'] + '<span>' + IE_TITLE.replace(/\\/g, '&#92;') + '</span></div>';
+    var html = '<button type="button" class="tbtn' + (S.active === ieWin ? ' cur' : '') + '" data-w="-1" title="' + IE_TITLE.replace(/\\/g, '&#92;') + '">' + W98['ie-small'] + '<span>' + IE_TITLE.replace(/\\/g, '&#92;') + '</span></button>';
     for (var i = 0; i < S.windows.length; i++) {
-      html += '<div class="tbtn' + (S.active === S.windows[i].el ? ' cur' : '') + '">' + W98['ie-small'] + '<span>' + POP_TITLE + '</span></div>';
+      html += '<button type="button" class="tbtn' + (S.active === S.windows[i].el ? ' cur' : '') + '" data-w="' + i + '" title="' + POP_TITLE + '">' + W98['ie-small'] + '<span>' + POP_TITLE + '</span></button>';
     }
     tasks.innerHTML = html;
   }
@@ -961,7 +1034,7 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
   function run() {
     S.reduced = reduceBox.checked;
     buildFrames(S.reduced);
-    dim.hidden = true; exeicon.hidden = true; off.hidden = true; blackout.hidden = true; bsod.hidden = true;
+    dim.hidden = true; off.hidden = true; blackout.hidden = true; bsod.hidden = true; tip.hidden = true;
     S.running = true; S.crashing = false; S.stage = 0; S.lastT = 0; S.hitchUntil = 0;
     S.ieBorn = performance.now(); S.ieInv = false;
     desktop.classList.remove('hung');
@@ -975,6 +1048,7 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
     S.raf = requestAnimationFrame(step);
   }
   function stopAll() {
+    clearInterval(S.setupTimer);
     S.running = false; S.crashing = false; S.stage = 0; S.busyShown = false;
     shut.hidden = true; $('shut-dlg').hidden = false; S.shutBusy = false;
     clearTimers();
@@ -1028,24 +1102,92 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
     showOff(false);
   }
   function showDialog() {
-    off.hidden = true; closeStart();
+    off.hidden = true; closeStart(); tip.hidden = true;
     $('moreinfo').hidden = true;
+    $('dl').hidden = false; setupWin.hidden = true;
     dim.hidden = false;
     $('run').focus();
   }
+  /* back to a fresh desktop: after Restart and when the monitor is switched on */
+  function boot() {
+    off.hidden = true; dim.hidden = true; blackout.hidden = true; bsod.hidden = true;
+    exeicon.hidden = false; tip.hidden = S.installed;
+    exeicon.focus();
+  }
+  /* double-clicking the icon: the download prompt and Setup the first time, the program after that */
+  function openExe() {
+    if (S.running) { spawn(1, S.windows[S.windows.length - 1] || null); return; }
+    if (S.installed) run(); else showDialog();
+  }
+
+  /* ---------- Setup wizard: Welcome, License, Installing, Finish ---------- */
+  var setupWin = $('setup'), suStep = 0;
+  var FILES = ['C:\\Program Files\\Idiot\\idiot.swf', 'C:\\Program Files\\Idiot\\laugh.wav', 'C:\\Program Files\\Idiot\\smiley.bmp',
+    'C:\\WINDOWS\\SYSTEM\\you.js', 'C:\\WINDOWS\\SYSTEM\\morewindows.dll', 'C:\\WINDOWS\\SYSTEM\\noclose.vxd', 'C:\\WINDOWS\\Desktop\\idiot.html'];
+  function setStep(n) {
+    suStep = n;
+    var steps = setupWin.querySelectorAll('.step');
+    for (var i = 0; i < steps.length; i++) steps[i].hidden = +steps[i].getAttribute('data-step') !== n;
+    $('su-back').disabled = n === 0 || n >= 2;
+    $('su-next').disabled = (n === 1 && !$('eula-yes').checked) || n === 2;
+    $('su-next').innerHTML = n === 3 ? 'Finish' : 'Next &gt;';
+    $('su-cancel').disabled = n >= 2;
+    $('su-x').disabled = n >= 2;
+    if (n === 2) installFiles();
+    var f = n === 1 ? $('eula-yes') : $('su-next');
+    if (!f.disabled) f.focus();
+  }
+  function startSetup() {
+    $('dl').hidden = true; setupWin.hidden = false;
+    $('eula-yes').checked = false; $('eula-no').checked = true;
+    setStep(0);
+  }
+  function installFiles() {
+    var pct = 0, k = 0;
+    clearInterval(S.setupTimer);
+    S.setupTimer = setInterval(function () {
+      pct = Math.min(100, pct + 2 + Math.random() * 4);
+      if (pct > (k + 1) * (100 / FILES.length) && k < FILES.length - 1) k++;
+      $('su-file').textContent = 'Copying ' + FILES[k];
+      $('su-bar').style.width = pct + '%';
+      $('su-prog').setAttribute('aria-valuenow', Math.round(pct));
+      $('su-pct').textContent = Math.round(pct) + '%';
+      if (pct >= 100) { clearInterval(S.setupTimer); setTimeout(function () { setStep(3); }, 400); }
+    }, 110);
+  }
+  function quitSetup() { clearInterval(S.setupTimer); dim.hidden = true; setupWin.hidden = true; $('dl').hidden = false; exeicon.focus(); }
+  $('su-back').addEventListener('click', function () { if (suStep > 0 && suStep < 2) setStep(suStep - 1); });
+  $('su-cancel').addEventListener('click', quitSetup);
+  $('su-x').addEventListener('click', function () { if (suStep < 2) quitSetup(); });
+  $('eula-yes').addEventListener('change', function () { $('su-next').disabled = false; });
+  $('eula-no').addEventListener('change', function () { $('su-next').disabled = true; });
+  $('su-next').addEventListener('click', function () {
+    if (suStep < 3) { setStep(suStep + 1); return; }
+    S.installed = true;
+    $('exe-lbl').textContent = 'You Are An Idiot';
+    exeicon.title = 'Double-click to run You Are An Idiot';
+    setupWin.hidden = true; $('dl').hidden = false;
+    if ($('su-launch').checked) run(); else { dim.hidden = true; exeicon.focus(); }
+  });
   function openStart() { startmenu.hidden = false; $('start').setAttribute('aria-expanded', 'true'); }
   function closeStart() { startmenu.hidden = true; $('start').setAttribute('aria-expanded', 'false'); }
 
   /* ---------- Wiring ---------- */
-  $('run').addEventListener('click', run);
-  var cancel = function () { dim.hidden = true; exeicon.hidden = false; exeicon.focus(); };
+  $('run').addEventListener('click', startSetup);   /* Run or Save, either way Setup starts */
+  var cancel = function () { dim.hidden = true; exeicon.focus(); };
   $('cancel').addEventListener('click', cancel);
   $('dlg-x').addEventListener('click', cancel);
   $('more').addEventListener('click', function () { $('moreinfo').hidden = false; });
-  exeicon.addEventListener('dblclick', showDialog);
-  exeicon.addEventListener('click', function (e) { if (e.detail === 0 || matchMedia('(pointer: coarse)').matches) showDialog(); });
-  exeicon.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); showDialog(); } });
-  $('reboot').addEventListener('click', showDialog);
+  exeicon.addEventListener('dblclick', openExe);
+  exeicon.addEventListener('click', function (e) { if (e.detail === 0 || matchMedia('(pointer: coarse)').matches) openExe(); });
+  exeicon.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); openExe(); } });
+  $('reboot').addEventListener('click', boot);
+  /* taskbar buttons bring their window to the front (late, once the system is hung) */
+  tasks.addEventListener('click', function (e) {
+    var t = e.target.closest('.tbtn'); if (!t || !S.running) return;
+    var i = +t.getAttribute('data-w');
+    later(function () { var w = i < 0 ? ieWin : (S.windows[i] && S.windows[i].el); if (w) activate(w); });
+  });
   $('start').addEventListener('click', function (e) { e.stopPropagation(); startmenu.hidden ? openStart() : closeStart(); });
   /* Start > Shut Down: the screen dims behind the dialog, as in Windows 98. While the
      system is hung it just sits there and gives up, as in the video. Esc and the monitor's
@@ -1069,7 +1211,7 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
       if (S.running && !S.crashing) spawn(2, S.windows[S.windows.length - 1]);
     }, 3500);
   });
-  $('sm-run').addEventListener('click', function () { closeStart(); if (S.running) spawn(1, S.windows[0] || null); else showDialog(); });
+  $('sm-run').addEventListener('click', function () { closeStart(); openExe(); });
   $('sm-mute').addEventListener('click', function () { closeStart(); setMuted(!S.muted); });
   $('mute').addEventListener('click', function () { setMuted(!S.muted); });
   ieWin.querySelector('.cls').addEventListener('click', function (e) {
@@ -1082,6 +1224,10 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
   document.addEventListener('click', function (e) { if (!startmenu.hidden && !startmenu.contains(e.target)) closeStart(); });
   document.addEventListener('keydown', function (e) {
     if (!bsod.hidden) { e.preventDefault(); endCrash(); return; }   /* "Press any key to continue" */
+    if (e.key === 'Delete' && S.running && !S.crashing && S.active) {
+      var cb = S.active.querySelector('.ttlbar .cls'); if (cb) cb.click();
+      return;
+    }
     if (e.key === 'Escape') { if (!startmenu.hidden) closeStart(); else if (!shut.hidden && !S.shutBusy) closeShut(); else if (S.running) { shut.hidden = true; shutDown(); } }
   });
   window.addEventListener('resize', function () { fit(); });
@@ -1135,13 +1281,13 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
   $('power').addEventListener('click', function () {
     if (S.powered) {
       stopAll(); closeStart();
-      dim.hidden = true; off.hidden = true; exeicon.hidden = true; bsod.hidden = true;
+      dim.hidden = true; off.hidden = true; exeicon.hidden = true; bsod.hidden = true; tip.hidden = true;
       blackout.hidden = false;
       S.powered = false; setLed('off');
     } else {
       blackout.hidden = true;
       S.powered = true; setLed('on');
-      showDialog();
+      boot();
     }
     $('power').setAttribute('aria-pressed', String(S.powered));
   });
@@ -1166,7 +1312,7 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
   paintIcons(document);
   fit();
   buildFrames(false);
-  $('run').focus();
+  exeicon.focus();
 })();
 </script>
 <!-- END ARTIFACT -->
