@@ -33,6 +33,7 @@
   --font-meme: "Times New Roman", Times, "Liberation Serif", "Nimbus Roman", serif;
   --font-mono: "Lucida Console", "Courier New", Menlo, monospace;
   --ww: clamp(220px, 60vw, 360px);
+  --ws: clamp(132px, 21vw, 210px);  /* spawned windows are smaller */
   color-scheme: light;
 }
 [hidden] { display: none !important; }
@@ -72,6 +73,13 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
 .dicon .pic { width: 40px; height: 40px; }
 .dicon .lbl { font-size: 12px; line-height: 1.2; word-break: break-all; }
 
+#smear { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+#blackout { position: fixed; inset: 0; z-index: 79; background: #000; cursor: none; }
+.hung, .hung * { cursor: progress !important; }
+.hung .win { border-color: #7c8fbf; background: #7c8fbf; }
+.hung .tbar { background: linear-gradient(180deg, #b7c4e6, #9fb0d8); }
+.hung .screen { filter: brightness(1.12) contrast(.86); }
+
 /* Prank window (XP Luna chrome) */
 .win {
   position: absolute; top: 0; left: 0;
@@ -93,6 +101,9 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
   cursor: default;
 }
 .tbar .ico { width: 16px; height: 16px; flex: none; }
+.win.small { width: var(--ws); }
+.win.small .tbar { height: 22px; font-size: 11px; }
+.win.small .tbar button { width: 17px; height: 17px; font-size: 10px; }
 .tbar .ttl { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tbar .btns { display: flex; gap: 2px; }
 .tbar button {
@@ -211,6 +222,7 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
 
 <div id="desktop">
   <div id="field">
+    <canvas id="smear" aria-hidden="true"></canvas>
     <button class="dicon" id="exeicon" type="button" title="Open youareanidiot.exe" hidden>
       <svg class="pic" viewBox="0 0 40 40" aria-hidden="true">
         <rect x="4" y="3" width="32" height="34" rx="2" fill="#fff" stroke="#333"/>
@@ -270,14 +282,16 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
         <button class="xpbtn primary" type="button" id="run">Run</button>
         <button class="xpbtn" type="button" id="cancel">Cancel</button>
       </div>
-      <p class="note">Trying to close the program will not go well. Press Esc or use Start &gt; Turn Off Computer to stop it.</p>
+      <p class="note">Trying to close the program will not go well. The slowdown and crash happen only inside this page. Press Esc or use Start &gt; Turn Off Computer to stop it.</p>
     </div>
   </div>
 </div>
 
+<div id="blackout" hidden></div>
+
 <div id="off" hidden>
   <h1>It's now safe to turn off your computer.</h1>
-  <p class="small">The program has been stopped and the sound has been silenced.</p>
+  <p class="small" id="off-note">The program has been stopped and the sound has been silenced.</p>
   <button type="button" id="reboot">Restart</button>
 </div>
 
@@ -286,10 +300,10 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
   'use strict';
   var $ = function (id) { return document.getElementById(id); };
   var desktop = $('desktop'), field = $('field'), tasks = $('tasks');
-  var dim = $('dim'), off = $('off'), startmenu = $('startmenu'), exeicon = $('exeicon');
+  var dim = $('dim'), off = $('off'), blackout = $('blackout'), startmenu = $('startmenu'), exeicon = $('exeicon');
   var reduceBox = $('reduce');
   var MAX_WINDOWS = 40;
-  var S = { running: false, reduced: false, muted: false, windows: [], raf: 0, flashTimer: 0, phase: 0, lastT: 0 };
+  var S = { running: false, crashing: false, stage: 0, reduced: false, muted: false, windows: [], frames: null, raf: 0, flashTimer: 0, autoTimer: 0, stutterTimer: 0, crashT1: 0, crashT2: 0, phase: 0, lastT: 0, lastApply: 0, hitchUntil: 0 };
 
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) reduceBox.checked = true;
 
@@ -315,11 +329,12 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
       g.lineWidth = 6.5;
       g.beginPath(); g.arc(x, y + 4, 28, Math.PI * 0.18, Math.PI * 0.82); g.stroke();
     }
-    return 'url("' + c.toDataURL('image/png') + '")';
+    return c;
   }
   function buildFrames(reduced) {
-    desktop.style.setProperty('--frame-a', drawFrame(false, 1, reduced));
-    desktop.style.setProperty('--frame-b', drawFrame(true, -1, reduced));
+    S.frames = [drawFrame(false, 1, reduced), drawFrame(true, -1, reduced)];
+    desktop.style.setProperty('--frame-a', 'url("' + S.frames[0].toDataURL('image/png') + '")');
+    desktop.style.setProperty('--frame-b', 'url("' + S.frames[1].toDataURL('image/png') + '")');
   }
 
   /* ---------- Audio: "You are an idiot!" + laugh, synthesized to match the original ----------
@@ -415,26 +430,98 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
     g.connect(boost); boost.connect(comp); comp.connect(ctx.destination);
     return g;
   }
+  /* Live playback: the loop is rendered once into a buffer, then played as looping layers.
+     More windows add more offset copies of the phrase; lag makes them skip; the crash
+     sticks one tiny slice into a buzzing loop, the way a hung sound driver does. */
+  var loopBuf = null, layers = [], audioGen = 0, liveTimer = 0, liveNext = 0;
   function initAudio() {
     var Ctx = window.AudioContext || window.webkitAudioContext;
     if (!Ctx) return false;
     AC = new Ctx();
-    master = makeChain(AC);
+    master = AC.createGain();
     master.gain.value = S.muted ? 0 : 1;
+    var lim = AC.createDynamicsCompressor(); lim.threshold.value = -8; lim.ratio.value = 12; lim.attack.value = 0.002; lim.release.value = 0.1;
+    master.connect(lim); lim.connect(AC.destination);
     return true;
   }
   function startAudio() {
     if (!AC && !initAudio()) return;
     if (AC.state === 'suspended') AC.resume();
-    nextLoop = AC.currentTime + 0.08;
+    var gen = ++audioGen;
+    var Off = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    if (!Off) { startLive(); return; }
+    var ctx = new Off(1, Math.round(AC.sampleRate * LOOP), AC.sampleRate);
+    scheduleLoop(ctx, makeChain(ctx), 0);
+    var done = false;
+    var finish = function (buf) {
+      if (done) return; done = true;
+      if (gen !== audioGen || !AC) return;
+      loopBuf = buf;
+      syncLayers();
+    };
+    ctx.oncomplete = function (e) { finish(e.renderedBuffer); };
+    var p = ctx.startRendering();
+    if (p && p.then) p.then(finish, function () { startLive(); });
+  }
+  function startLive() {
+    if (!AC) return;
+    liveNext = AC.currentTime + 0.08;
     var tick = function () {
-      while (nextLoop - AC.currentTime < 1.5) { scheduleLoop(AC, master, nextLoop); nextLoop += LOOP; }
+      while (AC && liveNext - AC.currentTime < 1.5) { scheduleLoop(AC, master, liveNext); liveNext += LOOP; }
     };
     tick();
-    loopTimer = setInterval(tick, 500);
+    liveTimer = setInterval(tick, 500);
+  }
+  var LAYER_GAIN = [1, 0.75, 0.62, 0.55];
+  function addLayer() {
+    var i = layers.length;
+    var src = AC.createBufferSource(); src.buffer = loopBuf; src.loop = true;
+    var g = AC.createGain(); g.gain.value = LAYER_GAIN[i] || 0.5;
+    src.connect(g); g.connect(master);
+    var offset = i === 0 ? 0 : (0.6 + Math.random() * 3.8);
+    src.start(AC.currentTime + 0.03, offset);
+    layers.push({ src: src, g: g, gain: g.gain.value });
+  }
+  function syncLayers() {
+    if (!AC || !loopBuf || S.crashing) return;
+    var want = S.stage === 0 ? 1 : S.stage === 1 ? 2 : (S.windows.length >= 28 ? 4 : 3);
+    while (layers.length < want) addLayer();
+  }
+  function stutter() {
+    if (!AC || !loopBuf || !layers.length || S.crashing) return;
+    var l = layers[Math.floor(Math.random() * layers.length)];
+    var t = AC.currentTime + 0.01, len = 0.045 + Math.random() * 0.1, reps = 3 + Math.floor(Math.random() * 6);
+    var pos = Math.random() * (LOOP - 0.3);
+    l.g.gain.setValueAtTime(0, t);
+    l.g.gain.setValueAtTime(l.gain, t + len * reps);
+    var s = AC.createBufferSource(); s.buffer = loopBuf; s.loop = true; s.loopStart = pos; s.loopEnd = pos + len;
+    var g = AC.createGain(); g.gain.value = l.gain;
+    s.connect(g); g.connect(master);
+    s.start(t, pos); s.stop(t + len * reps);
+  }
+  function crashBuzz(seconds) {
+    if (!AC) return;
+    clearInterval(liveTimer); liveTimer = 0;
+    var t = AC.currentTime + 0.01, i;
+    for (i = 0; i < layers.length; i++) { try { layers[i].src.stop(t); } catch (e) {} }
+    layers = [];
+    if (!loopBuf) return;
+    var pos = 0.62, len = 0.058;
+    var s = AC.createBufferSource(); s.buffer = loopBuf; s.loop = true; s.loopStart = pos; s.loopEnd = pos + len;
+    var shaper = AC.createWaveShaper(), curve = new Float32Array(1024);
+    for (i = 0; i < 1024; i++) { var x = i / 511.5 - 1; curve[i] = Math.tanh(3 * x); }
+    shaper.curve = curve;
+    var g = AC.createGain(); g.gain.value = 0.8;
+    s.connect(shaper); shaper.connect(g); g.connect(master);
+    s.start(t, pos);
+    g.gain.setValueAtTime(0.8, t + seconds);
+    g.gain.setValueAtTime(0, t + seconds + 0.005);
+    s.stop(t + seconds + 0.02);
   }
   function stopAudio() {
-    clearInterval(loopTimer); loopTimer = 0;
+    audioGen++;
+    clearInterval(liveTimer); liveTimer = 0;
+    layers = []; loopBuf = null;
     if (AC) { try { AC.close(); } catch (e) {} AC = null; master = null; }
   }
   function setMuted(m) {
@@ -461,101 +548,209 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
     var r = field.getBoundingClientRect();
     return { w: r.width, h: r.height };
   }
+
+  /* ---------- Stages: normal, bugging, not responding, crash ----------
+     All of it is simulated. Nothing here loads the device: "lag" is throttled redraws
+     and deliberate pauses, and the trails are stale copies painted on one canvas. */
+  var STAGE1_AT = 6, STAGE2_AT = 16;
+  var TITLE = 'You are an idiot', HUNG = 'You are an idiot (Not Responding)';
+  function updateStage() {
+    if (!S.running || S.crashing) return;
+    var n = S.windows.length;
+    if (n >= MAX_WINDOWS) { crash(); return; }
+    var st = n >= STAGE2_AT ? 2 : n >= STAGE1_AT ? 1 : 0;
+    if (st !== S.stage) {
+      S.stage = st;
+      desktop.classList.toggle('hung', st >= 2);
+      for (var i = 0; i < S.windows.length; i++) S.windows[i].ttl.textContent = st >= 2 ? HUNG : TITLE;
+      scheduleAuto();
+      scheduleStutter();
+    }
+    syncLayers();
+  }
+  function scheduleAuto() {
+    clearTimeout(S.autoTimer);
+    if (!S.running || S.crashing || S.stage === 0) return;
+    S.autoTimer = setTimeout(function () {
+      var src = S.windows[Math.floor(Math.random() * S.windows.length)];
+      spawn(1, src);
+      scheduleAuto();
+    }, S.stage === 1 ? 2200 : 850);
+  }
+  function scheduleStutter() {
+    clearTimeout(S.stutterTimer);
+    if (!S.running || S.crashing || S.stage < 2) return;
+    S.stutterTimer = setTimeout(function () { stutter(); scheduleStutter(); }, 900 + Math.random() * 1800);
+  }
+
+  /* ---------- Windows: bounce, multiply, never close ---------- */
   function spawn(count, near) {
+    if (!S.running || S.crashing) return;
     var b = bounds();
     for (var i = 0; i < count; i++) {
       if (S.windows.length >= MAX_WINDOWS) break;
       var el = document.createElement('div');
-      el.className = 'win';
-      el.innerHTML = '<div class="tbar">' + ICON + '<span class="ttl">You are an idiot</span>' +
+      el.className = near ? 'win small' : 'win';
+      el.innerHTML = '<div class="tbar">' + ICON + '<span class="ttl"></span>' +
         '<span class="btns"><button type="button" class="min" title="Minimize" aria-label="Minimize">_</button>' +
         '<button type="button" class="max" title="Maximize" aria-label="Maximize">&#9633;</button>' +
         '<button type="button" class="cls" title="Close" aria-label="Close">&#10005;</button></span></div>' +
         '<div class="screen" role="img" aria-label="you are an idiot, three smiling faces, flashing"></div>';
       field.appendChild(el);
+      var ttl = el.querySelector('.ttl');
+      ttl.textContent = S.stage >= 2 ? HUNG : TITLE;
       var w = el.offsetWidth, h = el.offsetHeight;
       var x, y;
       if (near) {
-        x = near.x + (Math.random() * 160 - 80); y = near.y + (Math.random() * 120 - 60);
+        x = near.x + near.w / 2 - w / 2 + (Math.random() * 160 - 80); y = near.y + near.h / 2 - h / 2 + (Math.random() * 120 - 60);
       } else {
         x = Math.random() * Math.max(1, b.w - w); y = Math.random() * Math.max(1, b.h - h);
       }
       x = Math.min(Math.max(0, x), Math.max(0, b.w - w)); y = Math.min(Math.max(0, y), Math.max(0, b.h - h));
-      var speed = (S.reduced ? 60 : 110) + Math.random() * (S.reduced ? 50 : 120);
+      var speed = (S.reduced ? 60 : 120) + Math.random() * (S.reduced ? 50 : 140);
       var ang = Math.random() * Math.PI * 2;
-      var win = { el: el, x: x, y: y, w: w, h: h, vx: Math.cos(ang) * speed, vy: Math.sin(ang) * speed };
-      if (Math.abs(win.vx) < 40) win.vx = 40 * (win.vx < 0 ? -1 : 1);
-      if (Math.abs(win.vy) < 30) win.vy = 30 * (win.vy < 0 ? -1 : 1);
+      var win = { el: el, ttl: ttl, tb: el.firstChild.offsetHeight, x: x, y: y, w: w, h: h, vx: Math.cos(ang) * speed, vy: Math.sin(ang) * speed };
+      if (Math.abs(win.vx) < 50) win.vx = 50 * (win.vx < 0 ? -1 : 1);
+      if (Math.abs(win.vy) < 40) win.vy = 40 * (win.vy < 0 ? -1 : 1);
       el.style.transform = 'translate(' + x + 'px,' + y + 'px)';
       S.windows.push(win);
       (function (win) {
-        el.querySelector('.cls').addEventListener('click', function (e) { e.stopPropagation(); bump(win); spawn(2, win); });
-        el.querySelector('.min').addEventListener('click', function (e) { e.stopPropagation(); bump(win); spawn(1, win); });
-        el.querySelector('.max').addEventListener('click', function (e) { e.stopPropagation(); bump(win); spawn(1, win); });
-        el.addEventListener('pointerdown', function () { field.appendChild(el); });
+        var hit = function (n) {
+          return function (e) {
+            e.stopPropagation();
+            /* a hung program answers late */
+            var delay = S.stage >= 2 ? 250 + Math.random() * 650 : 0;
+            setTimeout(function () { if (!S.running || S.crashing) return; bump(win); spawn(n, win); }, delay);
+          };
+        };
+        el.querySelector('.cls').addEventListener('click', hit(2));
+        el.querySelector('.min').addEventListener('click', hit(1));
+        el.querySelector('.max').addEventListener('click', hit(1));
+        el.addEventListener('pointerdown', function () { if (S.stage < 2) field.appendChild(el); });
       })(win);
     }
     updateTasks();
+    updateStage();
   }
   function bump(win) {
     win.vx *= -1.15; win.vy *= -1.15;
-    var lim = 420;
+    var lim = 440;
     win.vx = Math.max(-lim, Math.min(lim, win.vx)); win.vy = Math.max(-lim, Math.min(lim, win.vy));
   }
+
+  /* Stale-pixel trails: once the "desktop stops repainting", every redraw of a window is left behind. */
+  var smear = $('smear'), sg = smear.getContext('2d'), sdpr = 1;
+  function sizeSmear() {
+    var b = bounds();
+    sdpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    smear.width = Math.max(1, Math.round(b.w * sdpr)); smear.height = Math.max(1, Math.round(b.h * sdpr));
+    sg.setTransform(sdpr, 0, 0, sdpr, 0, 0);
+  }
+  function paintStale(w) {
+    var x = Math.round(w.x), y = Math.round(w.y), ww = w.w, hh = w.h, tb = w.tb, bd = 3;
+    sg.fillStyle = S.stage >= 2 ? '#7c8fbf' : '#0831d9';
+    sg.fillRect(x, y, ww, hh);
+    sg.fillStyle = S.stage >= 2 ? '#9fb0d8' : '#2a64f0';
+    sg.fillRect(x, y, ww, tb);
+    sg.fillStyle = '#d8562f';
+    sg.fillRect(x + ww - tb + 3, y + 3, tb - 7, tb - 7);
+    sg.fillStyle = '#ffffff';
+    sg.font = '700 ' + (tb < 26 ? 11 : 12) + 'px Tahoma, Verdana, sans-serif';
+    sg.fillText(S.stage >= 2 ? HUNG : TITLE, x + 24, y + tb * 0.66, ww - 3 * tb);
+    if (S.frames) sg.drawImage(S.frames[S.phase], x + bd, y + tb, ww - bd * 2, hh - tb - bd);
+  }
   function step(ts) {
-    if (!S.running) return;
-    var dt = S.lastT ? Math.min(0.05, (ts - S.lastT) / 1000) : 0;
+    if (!S.running || S.crashing) return;
+    S.raf = requestAnimationFrame(step);
+    if (!S.lastT) { S.lastT = ts; S.lastApply = ts; return; }
     S.lastT = ts;
+    if (ts < S.hitchUntil) return;                       /* simulated freeze */
+    var interval = S.stage === 0 ? 0 : S.stage === 1 ? 40 : 115;
+    if (ts - S.lastApply < interval) return;              /* simulated low frame rate */
+    var dt = Math.min(S.stage ? 0.45 : 0.05, (ts - S.lastApply) / 1000);
+    S.lastApply = ts;
+    if (S.stage === 1 && Math.random() < 0.008) S.hitchUntil = ts + 150 + Math.random() * 250;
+    if (S.stage === 2 && Math.random() < 0.06) S.hitchUntil = ts + 300 + Math.random() * 900;
     var b = bounds();
     for (var i = 0; i < S.windows.length; i++) {
       var w = S.windows[i];
+      if (S.stage >= 1) paintStale(w);
       w.x += w.vx * dt; w.y += w.vy * dt;
       var mx = Math.max(0, b.w - w.w), my = Math.max(0, b.h - w.h);
       if (w.x < 0) { w.x = 0; w.vx = Math.abs(w.vx); } else if (w.x > mx) { w.x = mx; w.vx = -Math.abs(w.vx); }
       if (w.y < 0) { w.y = 0; w.vy = Math.abs(w.vy); } else if (w.y > my) { w.y = my; w.vy = -Math.abs(w.vy); }
       w.el.style.transform = 'translate(' + w.x + 'px,' + w.y + 'px)';
     }
-    S.raf = requestAnimationFrame(step);
   }
   function updateTasks() {
     var n = S.windows.length;
     tasks.innerHTML = n ? '<div class="tbtn">' + ICON + '<span>' + (n > 1 ? '(' + n + ') ' : '') + 'You are an idiot</span></div>' : '';
   }
   function flashToggle() {
+    if (performance.now() < S.hitchUntil) return;
     S.phase ^= 1;
     desktop.classList.toggle('phase-b', S.phase === 1);
   }
 
   /* ---------- Lifecycle ---------- */
+  function clearTimers() {
+    cancelAnimationFrame(S.raf); S.raf = 0;
+    clearInterval(S.flashTimer); S.flashTimer = 0;
+    clearTimeout(S.autoTimer); clearTimeout(S.stutterTimer);
+    clearTimeout(S.crashT1); clearTimeout(S.crashT2);
+  }
   function run() {
     S.reduced = reduceBox.checked;
     buildFrames(S.reduced);
-    dim.hidden = true; exeicon.hidden = true; off.hidden = true;
-    S.running = true; S.lastT = 0; S.phase = 0;
-    desktop.classList.remove('phase-b');
-    clearInterval(S.flashTimer);
+    dim.hidden = true; exeicon.hidden = true; off.hidden = true; blackout.hidden = true;
+    S.running = true; S.crashing = false; S.stage = 0; S.lastT = 0; S.hitchUntil = 0; S.phase = 0;
+    desktop.classList.remove('phase-b', 'hung');
+    sizeSmear();
+    clearTimers();
     S.flashTimer = setInterval(flashToggle, S.reduced ? 700 : 333); /* original: 4 frames at 12 fps */
     startAudio();
     if (!S.windows.length) spawn(1);
-    cancelAnimationFrame(S.raf);
     S.raf = requestAnimationFrame(step);
   }
   function stopAll() {
-    S.running = false;
-    cancelAnimationFrame(S.raf); S.raf = 0;
-    clearInterval(S.flashTimer); S.flashTimer = 0;
+    S.running = false; S.crashing = false; S.stage = 0;
+    clearTimers();
     stopAudio();
     for (var i = 0; i < S.windows.length; i++) field.removeChild(S.windows[i].el);
     S.windows = [];
-    desktop.classList.remove('phase-b');
+    sg.clearRect(0, 0, smear.width, smear.height);
+    desktop.classList.remove('phase-b', 'hung');
     updateTasks();
+    clock();
+  }
+  function showOff(crashed) {
+    $('off-note').textContent = crashed
+      ? 'The windows used up everything and the sound got stuck. Nothing actually crashed: it was all part of the joke.'
+      : 'The program has been stopped and the sound has been silenced.';
+    off.hidden = false;
+    $('reboot').focus();
+  }
+  function crash() {
+    if (S.crashing) return;
+    S.crashing = true;
+    clearTimers();                       /* freeze on the current frame */
+    desktop.classList.add('hung');
+    crashBuzz(3.2);
+    S.crashT1 = setTimeout(function () {
+      stopAudio();
+      blackout.hidden = false;
+      S.crashT2 = setTimeout(function () {
+        stopAll();
+        blackout.hidden = true;
+        showOff(true);
+      }, 1600);
+    }, 3200);
   }
   function shutDown() {
     stopAll();
     closeStart();
-    dim.hidden = true;
-    off.hidden = false;
-    $('reboot').focus();
+    dim.hidden = true; blackout.hidden = true;
+    showOff(false);
   }
   function showDialog() {
     off.hidden = true; closeStart();
@@ -571,7 +766,7 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
   $('reboot').addEventListener('click', showDialog);
   $('start').addEventListener('click', function (e) { e.stopPropagation(); startmenu.hidden ? openStart() : closeStart(); });
   $('sm-off').addEventListener('click', shutDown);
-  $('sm-run').addEventListener('click', function () { closeStart(); if (S.running) spawn(1); else showDialog(); });
+  $('sm-run').addEventListener('click', function () { closeStart(); if (S.running) spawn(1, S.windows[0]); else showDialog(); });
   $('sm-mute').addEventListener('click', function () { closeStart(); setMuted(!S.muted); });
   $('mute').addEventListener('click', function () { setMuted(!S.muted); });
   document.addEventListener('click', function (e) { if (!startmenu.hidden && !startmenu.contains(e.target)) closeStart(); });
@@ -579,7 +774,8 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
     if (e.key === 'Escape') { if (!startmenu.hidden) closeStart(); else if (S.running) shutDown(); }
   });
   window.addEventListener('resize', function () {
-    for (var i = 0; i < S.windows.length; i++) { S.windows[i].w = S.windows[i].el.offsetWidth; S.windows[i].h = S.windows[i].el.offsetHeight; }
+    for (var i = 0; i < S.windows.length; i++) { var q = S.windows[i]; q.w = q.el.offsetWidth; q.h = q.el.offsetHeight; q.tb = q.el.firstChild.offsetHeight; }
+    sizeSmear();
   });
   document.addEventListener('visibilitychange', function () {
     if (!AC) return;
@@ -588,11 +784,15 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
   });
 
   function clock() {
+    if (S.running && S.stage >= 2) return;             /* the clock stops while the system is hung */
     var d = new Date(), h = d.getHours(), m = d.getMinutes();
     var ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
     $('clock').textContent = h + ':' + (m < 10 ? '0' : '') + m + ' ' + ap;
   }
   clock(); setInterval(clock, 15000);
+
+  /* Test hook: jump straight to a window count to check each stage. */
+  window.idiotSpawn = function (n) { for (var i = 0; i < n; i++) spawn(1, S.windows[i % S.windows.length]); return S.stage; };
 
   buildFrames(false);
   $('run').focus();
