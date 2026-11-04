@@ -4,11 +4,11 @@ A single-file recreation of the "You are an idiot!" meme as seen in its best-kno
 demo: a Windows 98 desktop runs `idiot.exe`, Internet Explorer opens the classic two-frame
 Flash loop (serif "you are an idiot", three hopping smileys, black/white strobe), then small
 IE popups bounce around the screen, each flashing on its own clock, and every attempt to
-close one brings up a "You are an idiot!" message box and spawns more. Every window plays its own copy of "You are an idiot! Ha ha ha ha ha ha ha!" on repeat,
-starting when it opens, so the copies pile up as the windows multiply. The jingle is an
-original recording made for this page with an offline text-to-speech voice (Piper) at its
-natural speed and pitch. An offline speech recognizer transcribes it as "you are an idiot
-ha ha ha ha ha ha ha". It is embedded as a small MP3, so the page has no external assets.
+close one brings up a "You are an idiot!" message box and spawns more. Every window plays its own copy of the "You are an idiot! Ha ha ha..." jingle on repeat,
+starting when it opens, so the copies pile up as the windows multiply. The jingle is a
+clip supplied by the repository owner, trimmed of the silence at both ends (5.07 s), played at
+normal speed. It is embedded as an MP3, and the page also trims any decoder padding so each
+repeat follows straight on.
 
 Open `index.html` in a browser. On a computer the desktop runs inside a widescreen PC
 monitor at a fixed resolution (1280x800, 1024x640 or 768x480, whichever fits). On touch
