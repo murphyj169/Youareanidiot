@@ -1,9 +1,10 @@
 # You Are An Idiot
 
-A single-file recreation of the "You are an idiot!" prank program: a fake Windows XP
-desktop runs `youareanidiot.exe`, the classic two-frame Flash loop (serif "you are an idiot",
-three hopping smileys, black/white strobe) bounces around the screen, and every attempt to
-close the window spawns more of them. The choir and the laugh are synthesized with the
+A single-file recreation of the "You are an idiot!" meme as seen in its best-known video
+demo: a Windows 98 desktop runs `idiot.exe`, Internet Explorer opens the classic two-frame
+Flash loop (serif "you are an idiot", three hopping smileys, black/white strobe), then small
+IE popups bounce around the screen, each flashing on its own clock, and every attempt to
+close one brings up a "You are an idiot!" message box and spawns more. The choir and the laugh are synthesized with the
 Web Audio API, so there are no external assets. The synthesis was tuned against onset and
 spectral analysis of the original 5.0 s clip: six sung syllables on a B major chord, then
 sixteen shrill laughs around B4, with the screen inverting every 333 ms (4 frames at 12 fps)
@@ -23,15 +24,15 @@ which also carries the photosensitivity and sound warning and a reduced-flashing
 
 The run follows the meme videos, driven by how many windows are open:
 
-1. **Normal.** One window bounces and "you are an idiot, ha ha ha ha" repeats on a 5 s loop.
-2. **Bugging (6+ windows).** Closing a window spawns smaller ones. The desktop stops
+1. **Normal.** Internet Explorer plays the page, then four popups appear. A window bounces and "you are an idiot, ha ha ha ha" repeats on a 5 s loop.
+2. **Bugging (8+ windows).** Closing a window spawns smaller ones. The desktop stops
    repainting, so windows leave staircase trails. Motion turns choppy, and a second copy
    of the phrase starts overlapping.
-3. **Not responding (16+ windows).** Title bars read "(Not Responding)", the cursor turns
-   busy, the clock stops, and clicks answer late. More copies of the phrase pile up, and the
+3. **Hung (20+ windows).** The cursor turns to an hourglass, the clock stops, and clicks answer late. More copies of the phrase pile up, and the
    sound skips and stutters.
-4. **Crash (40 windows).** Everything freezes, the sound sticks into a looping buzz, the
-   screen cuts to black, then shows "It's now safe to turn off your computer."
+4. **Crash (44 windows).** Everything freezes and the sound sticks into a looping buzz that
+   carries on behind a Windows 98 blue screen. Any key ends it, then the screen shows
+   "It's now safe to turn off your computer."
 
 Every effect is simulated inside the page. It opens no real windows and puts no real load
 on the device: the lag is throttled redraws and deliberate pauses.

@@ -6,35 +6,32 @@
 <!-- BEGIN ARTIFACT -->
 <title>You Are An Idiot</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&display=swap">
 <style>
-/* Layout: a widescreen PC monitor in a dim room. Inside it, a simulated Windows XP
-   desktop runs at a fixed resolution (1280x800, 1024x640 or 768x480, whichever fits)
-   and is scaled to the viewport; landscape fills it best. Single theme by choice:
-   the page imitates one specific operating system on one specific screen. */
+/* Layout: a widescreen PC monitor in a dim room. Inside it, a Windows 98 desktop
+   (classic theme, as in the meme's best-known video) runs at a fixed resolution
+   (1280x800, 1024x640 or 768x480, whichever fits) scaled to the viewport.
+   Single theme by choice: the page imitates one operating system on one screen. */
 :root {
-  --desk-top: #4f94e6;          /* XP "Bliss" sky */
-  --desk-bottom: #1d4d9c;
-  --chrome: #0831d9;            /* Luna title bar */
-  --chrome-hi: #3f8cf3;
-  --chrome-lo: #0423a8;
-  --close: #d8562f;
-  --close-hi: #f08a62;
-  --paper: #ece9d8;             /* XP dialog grey */
-  --paper-edge: #aca899;
+  --teal: #008080;              /* Windows 98 desktop */
+  --face: #c0c0c0;              /* 3D face */
+  --hilite: #ffffff;
+  --light: #dfdfdf;
+  --shadow: #808080;
+  --dark: #000000;
+  --navy: #000080;              /* active title bar */
+  --navy-2: #1084d0;
+  --inact: #808080;             /* inactive title bar */
+  --inact-2: #b5b5b5;
+  --inact-ink: #d4d0c8;
   --ink: #000000;
-  --ink-soft: #444444;
-  --link: #0a246a;
-  --start: #3c9b2b;
-  --start-hi: #7bd65a;
-  --task: #245edb;
-  --task-lo: #1941a5;
-  --tray: #0f9bf0;
-  --amber: #ffb000;             /* "safe to turn off" screen */
-  --font-ui: Tahoma, Verdana, "Segoe UI", "DejaVu Sans", sans-serif;
-  --font-meme: "Times New Roman", Times, "Liberation Serif", "Nimbus Roman", serif;
-  --font-mono: "Lucida Console", "Courier New", Menlo, monospace;
-  --ww: 340px;
-  --ws: 170px;                  /* spawned windows are smaller */
+  --page: #ffffff;
+  --bsod: #0000aa;
+  --bsod-ink: #ffffff;
+  --amber: #ff8c00;             /* "safe to turn off" screen */
+  --amber-soft: #a86214;
   --room: #121419;              /* the dark room around the monitor */
   --room-hi: #22252d;
   --bezel: #25272c;
@@ -42,7 +39,14 @@
   --label: #8d929c;
   --led: #3dff6e;
   --led-busy: #ffb000;
-  color-scheme: light;
+  --font-ui: Tahoma, "MS Sans Serif", Verdana, "DejaVu Sans", sans-serif;
+  --font-meme: "Times New Roman", Times, "Liberation Serif", "Nimbus Roman", serif;
+  --font-text: "VT323", "Lucida Console", "Courier New", monospace;
+  --raised: inset -1px -1px var(--dark), inset 1px 1px var(--light), inset -2px -2px var(--shadow), inset 2px 2px var(--hilite);
+  --sunken: inset -1px -1px var(--hilite), inset 1px 1px var(--shadow), inset -2px -2px var(--light), inset 2px 2px var(--dark);
+  --pressed: inset -1px -1px var(--hilite), inset 1px 1px var(--dark), inset -2px -2px var(--light), inset 2px 2px var(--shadow);
+  --thin-sunken: inset -1px -1px var(--hilite), inset 1px 1px var(--shadow);
+  color-scheme: dark;
 }
 [hidden] { display: none !important; }
 html, body { height: 100%; }
@@ -52,176 +56,181 @@ body {
   background: radial-gradient(ellipse at 50% 38%, var(--room-hi) 0%, var(--room) 72%);
   color: var(--ink);
   font-family: var(--font-ui);
-  font-size: 13px;
+  font-size: 11px;
   -webkit-user-select: none;
   user-select: none;
+  -webkit-font-smoothing: none;
 }
-button { font-family: inherit; font-size: inherit; cursor: pointer; }
-button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outline-offset: 1px; }
+button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: default; }
+#display button:focus-visible { outline: 1px dotted var(--ink); outline-offset: -4px; }
 
-#desktop {
-  position: relative;
-  height: 100%;
-  box-sizing: border-box;
-  padding-inline: 12px;
-  padding-block: 12px 46px;
-  overflow: hidden;
+/* ---------- Desktop ---------- */
+#desktop { position: absolute; inset: 0 0 28px 0; overflow: hidden; background: var(--teal); }
+#field { position: absolute; inset: 0; }
+#icons {
+  position: absolute; top: 4px; left: 4px; z-index: 1;
+  display: grid; grid-template-columns: repeat(2, 75px); grid-auto-rows: 61px; grid-auto-flow: column;
+  grid-template-rows: repeat(5, 61px);
 }
-#field { position: relative; width: 100%; height: 100%; }
-
-/* Desktop icon */
 .dicon {
-  position: absolute; top: 8px; left: 0;
-  width: 84px; display: flex; flex-direction: column; align-items: center; gap: 4px;
-  color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.9); text-align: center;
-  cursor: pointer; padding: 4px; border-radius: 3px; background: transparent; border: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 2px 0 0;
+  color: var(--hilite); text-align: center; background: transparent; border: 0;
 }
-.dicon:hover, .dicon:focus-visible { background: rgba(255,255,255,.15); }
-.dicon .pic { width: 40px; height: 40px; }
-.dicon .lbl { font-size: 12px; line-height: 1.2; word-break: break-all; }
+.dicon .pic { width: 32px; height: 32px; display: block; }
+.dicon .pic svg { width: 32px; height: 32px; display: block; }
+.dicon .lbl { line-height: 1.15; padding: 0 1px; }
+.dicon:focus .lbl, .dicon:active .lbl { background: var(--navy); outline: 1px dotted #ffff00; }
+.dicon:focus .pic, .dicon:active .pic { filter: sepia(1) hue-rotate(190deg) saturate(3) brightness(.7); }
+#exeicon { cursor: pointer; }
 
-#smear { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+#smear { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
 #blackout { position: absolute; inset: 0; z-index: 79; background: #000; cursor: none; }
-.hung, .hung * { cursor: progress !important; }
-.hung .win { border-color: #7c8fbf; background: #7c8fbf; }
-.hung .tbar { background: linear-gradient(180deg, #b7c4e6, #9fb0d8); }
-.hung .screen { filter: brightness(1.12) contrast(.86); }
+.hung, .hung * { cursor: wait !important; }
 
-/* Prank window (XP Luna chrome) */
-.win {
-  position: absolute; top: 0; left: 0;
-  width: var(--ww);
-  border: 3px solid var(--chrome);
-  border-top: 0;
-  border-radius: 8px 8px 0 0;
-  background: var(--chrome);
-  box-shadow: 0 6px 18px rgba(0,0,0,.35);
-  will-change: transform;
+/* ---------- Classic window chrome ---------- */
+.w98 { position: absolute; top: 0; left: 0; background: var(--face); padding: 3px; box-shadow: var(--raised); box-sizing: border-box; }
+.ttlbar {
+  height: 18px; display: flex; align-items: center; gap: 3px; padding: 0 2px 0 3px;
+  background: linear-gradient(90deg, var(--inact), var(--inact-2));
+  color: var(--inact-ink); font-weight: 700; font-size: 11px;
 }
-.tbar {
-  height: 28px; display: flex; align-items: center; gap: 6px;
-  padding: 0 4px 0 6px;
-  border-radius: 7px 7px 0 0;
-  background: linear-gradient(180deg, var(--chrome-hi) 0%, var(--chrome) 12%, var(--chrome) 70%, var(--chrome-lo) 100%);
-  color: #fff; font-weight: 700; font-size: 13px;
-  text-shadow: 1px 1px 0 rgba(0,0,0,.6);
-  cursor: default;
+.active > .ttlbar { background: linear-gradient(90deg, var(--navy), var(--navy-2)); color: var(--hilite); }
+.ttlbar .ico { width: 16px; height: 16px; flex: none; }
+.ttlbar .ico svg { width: 16px; height: 16px; display: block; }
+.ttlbar .ttl { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ttlbar .btns { display: flex; flex: none; }
+.ttlbar button {
+  width: 16px; height: 14px; padding: 0; border: 0; background: var(--face); box-shadow: var(--raised);
+  display: grid; place-items: center;
 }
-.tbar .ico { width: 16px; height: 16px; flex: none; }
-.win.small { width: var(--ws); }
-.win.small .tbar { height: 22px; font-size: 11px; }
-.win.small .tbar button { width: 17px; height: 17px; font-size: 10px; }
-.tbar .ttl { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tbar .btns { display: flex; gap: 2px; }
-.tbar button {
-  width: 21px; height: 21px; padding: 0; border-radius: 3px;
-  border: 1px solid #fff; color: #fff; font-weight: 700; line-height: 1;
-  background: linear-gradient(180deg, #5a9cf5, var(--task));
-  box-shadow: inset 0 0 0 1px rgba(0,0,0,.25);
-}
-.tbar button.cls { background: linear-gradient(180deg, var(--close-hi), var(--close)); }
-.tbar button:hover { filter: brightness(1.15); }
-.screen {
-  display: block;
-  width: 100%; aspect-ratio: 4 / 3; max-width: 100%;
-  background: #fff center / 100% 100% no-repeat;
-  background-image: var(--frame-a);
-}
-.phase-b .screen { background-image: var(--frame-b); }
+.ttlbar button.cls { margin-left: 2px; }
+.ttlbar button:active { box-shadow: var(--pressed); }
+.ttlbar button svg { width: 8px; height: 7px; display: block; }
 
-/* Taskbar */
+/* Popup: a small Internet Explorer window with the movie embedded in a white page */
+.pop { width: 150px; will-change: transform; }
+.pop .pg { background: var(--page); margin-top: 2px; padding: 10px 0 7px; box-shadow: var(--sunken); padding-inline: 2px; }
+.mv {
+  display: block; width: 100%; aspect-ratio: 4 / 3; max-width: 100%;
+  background: var(--page) center / 100% 100% no-repeat; background-image: var(--frame-a);
+  box-shadow: 0 -1px 0 var(--dark), 0 1px 0 var(--dark);
+}
+.inv .mv { background-image: var(--frame-b); }
+
+/* The big Internet Explorer window with the page */
+#ie { left: 36%; top: 17%; width: 74%; height: 92%; display: flex; flex-direction: column; z-index: 2; }
+#ie .bar { display: flex; align-items: center; gap: 2px; padding: 1px 2px; box-shadow: inset 0 -1px var(--shadow), inset 0 -2px var(--hilite); }
+#ie .menu span { padding: 2px 6px; }
+#ie .tools { gap: 0; padding: 2px 2px 3px; }
+.tb { display: flex; flex-direction: column; align-items: center; gap: 1px; min-width: 44px; padding: 2px 3px; color: var(--ink); }
+.tb svg { width: 20px; height: 20px; display: block; }
+.tb.off { color: var(--shadow); }
+.tsep { width: 2px; align-self: stretch; margin: 2px 3px; box-shadow: inset 1px 0 var(--shadow), inset -1px 0 var(--hilite); }
+.field { flex: 1; min-width: 0; height: 20px; display: flex; align-items: center; gap: 3px; padding: 0 4px; background: var(--page); box-shadow: var(--sunken); white-space: nowrap; overflow: hidden; }
+.field .ico svg { width: 16px; height: 16px; display: block; }
+.lnk { display: flex; align-items: center; gap: 3px; padding: 1px 5px; white-space: nowrap; }
+.lnk svg { width: 16px; height: 16px; display: block; }
+#ie .content { flex: 1; min-height: 0; margin-top: 2px; background: var(--page); box-shadow: var(--sunken); display: flex; align-items: flex-start; justify-content: center; padding: 6px 4px; overflow: hidden; }
+#ie .mv { width: auto; height: 96%; max-width: none; }
+
+/* Message box: "You are an idiot!" */
+.msg { width: 230px; }
+.msg .mb { display: flex; align-items: center; gap: 14px; padding: 12px 12px 8px 14px; }
+.msg .mb svg { width: 32px; height: 32px; flex: none; display: block; }
+.msg .ok { display: flex; justify-content: center; padding: 4px 0 8px; }
+
+.btn98 {
+  min-width: 75px; height: 23px; padding: 0 10px; border: 0; background: var(--face); box-shadow: var(--raised);
+}
+.btn98:active { box-shadow: var(--pressed); }
+.btn98.default { box-shadow: inset 0 0 0 1px var(--dark), inset -2px -2px var(--dark), inset 2px 2px var(--light), inset -3px -3px var(--shadow), inset 3px 3px var(--hilite); }
+
+/* ---------- Taskbar ---------- */
 #taskbar {
   position: absolute; left: 0; right: 0; bottom: 0; z-index: 50;
-  height: 34px;
-  display: flex; align-items: stretch;
-  background: linear-gradient(180deg, #3168d5 0%, var(--task) 8%, var(--task) 90%, var(--task-lo) 100%);
-  box-shadow: 0 -1px 0 #6b9ff2;
+  height: 28px; box-sizing: border-box; padding: 4px 2px 2px;
+  display: flex; align-items: stretch; gap: 3px;
+  background: var(--face); box-shadow: inset 0 1px var(--light), inset 0 2px var(--hilite);
 }
 #start {
-  flex: none; display: flex; align-items: center; gap: 6px;
-  padding: 0 14px 0 10px;
-  border: 0; border-radius: 0 12px 12px 0;
-  background: linear-gradient(180deg, var(--start-hi) 0%, var(--start) 20%, #2f7f22 100%);
-  color: #fff; font-style: italic; font-weight: 700; font-size: 16px;
-  text-shadow: 1px 1px 1px rgba(0,0,0,.6); box-shadow: 2px 0 4px rgba(0,0,0,.3);
+  flex: none; display: flex; align-items: center; gap: 3px; padding: 0 5px 0 3px;
+  border: 0; background: var(--face); box-shadow: var(--raised); font-weight: 700; font-size: 11px;
 }
-#start:hover { filter: brightness(1.1); }
-#tasks { flex: 1; min-width: 0; display: flex; align-items: center; gap: 4px; padding: 0 6px; overflow: hidden; }
+#start[aria-expanded="true"] { box-shadow: var(--pressed); }
+#start svg { width: 16px; height: 16px; display: block; }
+.vsep { width: 2px; flex: none; margin: 0 1px; box-shadow: inset 1px 0 var(--shadow), inset -1px 0 var(--hilite); }
+.grip { width: 3px; flex: none; margin: 1px 1px; box-shadow: inset 1px 1px var(--hilite), inset -1px -1px var(--shadow); }
+#quick { display: flex; align-items: center; gap: 1px; flex: none; }
+#quick span { width: 22px; height: 22px; display: grid; place-items: center; }
+#quick svg { width: 16px; height: 16px; display: block; }
+#tasks { flex: 1; min-width: 0; display: flex; gap: 3px; overflow: hidden; }
 .tbtn {
-  display: flex; align-items: center; gap: 6px; height: 24px; padding: 0 8px;
-  border: 1px solid #0f3fb0; border-radius: 3px; color: #fff; font-size: 12px; white-space: nowrap;
-  background: linear-gradient(180deg, #1f4fc9, #1a44b0); box-shadow: inset 1px 1px 0 rgba(255,255,255,.25);
+  flex: 0 1 160px; min-width: 22px; display: flex; align-items: center; gap: 3px; padding: 0 4px 0 3px;
+  background: var(--face); box-shadow: var(--raised); white-space: nowrap; overflow: hidden;
 }
-.tbtn .ico { width: 14px; height: 14px; }
-#tray {
-  flex: none; display: flex; align-items: center; gap: 8px;
-  padding: 0 10px;
-  background: linear-gradient(180deg, #19a7f6 0%, var(--tray) 60%, #0d7fd0 100%);
-  box-shadow: inset 2px 0 3px rgba(0,0,0,.25); color: #fff; font-size: 12px;
-}
-#mute { width: 22px; height: 22px; padding: 0; border: 0; background: transparent; color: #fff; }
-#mute svg { width: 18px; height: 18px; display: block; }
-#clock { font-variant-numeric: tabular-nums; }
+.tbtn svg { width: 16px; height: 16px; display: block; flex: none; }
+.tbtn span { overflow: hidden; text-overflow: ellipsis; }
+.tbtn.cur { box-shadow: var(--pressed); font-weight: 700; background: repeating-conic-gradient(var(--hilite) 0 25%, var(--face) 0 50%) 0 0 / 2px 2px; }
+#tray { flex: none; display: flex; align-items: center; gap: 4px; padding: 0 8px 0 4px; box-shadow: var(--thin-sunken); }
+#mute { width: 18px; height: 18px; padding: 0; border: 0; background: transparent; }
+#mute svg { width: 16px; height: 16px; display: block; }
+#clock { font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 #startmenu {
-  position: absolute; left: 0; bottom: 34px;
-  z-index: 60; width: 230px;
-  border: 1px solid var(--chrome-lo); border-radius: 6px 6px 0 0; overflow: hidden;
-  background: #fff; box-shadow: 2px 2px 8px rgba(0,0,0,.4);
+  position: absolute; left: 2px; bottom: 26px; z-index: 60;
+  display: flex; padding: 3px; background: var(--face); box-shadow: var(--raised);
 }
-#startmenu .head {
-  padding: 8px 10px; color: #fff; font-weight: 700;
-  background: linear-gradient(180deg, var(--chrome-hi), var(--chrome));
+#startmenu .banner {
+  width: 21px; background: linear-gradient(0deg, var(--navy), var(--navy-2));
+  display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px;
 }
-#startmenu .item {
-  display: block; width: 100%; text-align: left; padding: 9px 12px; border: 0; background: #fff; color: var(--ink);
-}
-#startmenu .item:hover { background: var(--task); color: #fff; }
-#startmenu .foot { padding: 6px 10px; background: linear-gradient(180deg, var(--chrome), var(--chrome-lo)); }
-#startmenu .foot .item { background: transparent; color: #fff; padding: 6px 2px; }
-#startmenu .foot .item:hover { text-decoration: underline; }
+#startmenu .banner span { writing-mode: vertical-rl; transform: rotate(180deg); color: var(--face); font: 700 17px/1 Arial, sans-serif; letter-spacing: .02em; }
+#startmenu .banner b { color: var(--hilite); }
+#startmenu .items { display: flex; flex-direction: column; min-width: 170px; }
+#startmenu .item { display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 16px 0 6px; border: 0; background: transparent; text-align: left; }
+#startmenu .item svg { width: 24px; height: 24px; display: block; flex: none; }
+#startmenu .item:hover, #startmenu .item:focus-visible { background: var(--navy); color: var(--hilite); outline: 0; }
+#startmenu .hsep { height: 2px; margin: 2px 1px; box-shadow: inset 0 1px var(--shadow), inset 0 -1px var(--hilite); }
 
-/* Dialog: Open File - Security Warning */
-#dim { position: absolute; inset: 0; z-index: 70; display: flex; align-items: center; justify-content: center;
-  padding: 16px; box-sizing: border-box; }
-.dlg {
-  width: 100%; max-width: 420px;
-  border: 3px solid var(--chrome); border-top: 0; border-radius: 8px 8px 0 0;
-  background: var(--chrome); box-shadow: 0 8px 24px rgba(0,0,0,.45);
-}
-.dlg .body { background: var(--paper); padding: 14px 14px 12px; display: flex; flex-direction: column; gap: 12px; }
+/* ---------- File Download dialog ---------- */
+#dim { position: absolute; inset: 0 0 28px 0; z-index: 70; display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; }
+.dlg { position: relative; width: 100%; max-width: 380px; }
+.dlg .body { padding: 10px 10px 8px; display: flex; flex-direction: column; gap: 9px; line-height: 1.35; }
+.dlg p { margin: 0; }
 .dlg .row { display: flex; gap: 12px; align-items: flex-start; }
-.dlg .shield { width: 36px; height: 36px; flex: none; }
-.dlg p { margin: 0; line-height: 1.4; }
-.dlg dl { margin: 0 0 0 48px; display: grid; grid-template-columns: 70px 1fr; row-gap: 4px; column-gap: 8px; }
-.dlg dt { color: var(--ink-soft); }
-.dlg dd { margin: 0; font-weight: 700; min-width: 0; overflow-wrap: anywhere; }
-.dlg .warn { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; background: #fff8dc; border: 1px solid #d8c070; }
-.dlg .warn svg { width: 22px; height: 22px; flex: none; }
-.dlg label { display: flex; gap: 8px; align-items: center; cursor: pointer; }
-.dlg .acts { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
-.xpbtn {
-  min-width: 84px; height: 24px; padding: 0 12px;
-  border: 1px solid #003c74; border-radius: 3px;
-  background: linear-gradient(180deg, #fff 0%, #ece9d8 100%);
-  color: var(--ink); box-shadow: inset 0 0 0 1px #fff;
-}
-.xpbtn.primary { box-shadow: inset 0 0 0 1px #fff, 0 0 0 2px #7aa7ff; }
-.xpbtn:hover { background: linear-gradient(180deg, #fff 0%, #fde9b5 100%); border-color: #e5a533; }
-.dlg .note { color: var(--ink-soft); font-size: 11px; margin-left: 48px; }
+.dlg .row svg { width: 32px; height: 32px; flex: none; display: block; }
+.dlg fieldset { margin: 0; padding: 6px 10px 8px; border: 0; box-shadow: inset 1px 1px var(--shadow), inset -1px -1px var(--hilite), inset 2px 2px var(--hilite), inset -2px -2px var(--shadow); display: flex; flex-direction: column; gap: 5px; }
+.dlg legend { padding: 0 3px; }
+.dlg label { display: flex; gap: 6px; align-items: center; }
+.dlg input { margin: 0; accent-color: var(--navy); }
+.dlg .warn { display: flex; gap: 8px; align-items: flex-start; padding: 6px 8px; background: #ffffe1; box-shadow: inset 0 0 0 1px var(--dark); }
+.dlg .warn svg { width: 20px; height: 20px; flex: none; display: block; }
+.dlg .acts { display: flex; justify-content: flex-end; gap: 6px; flex-wrap: wrap; padding-top: 2px; }
+.dlg .note { color: #404040; }
 
-/* Shut-down screen */
+/* ---------- Crash: blue screen, then the shutdown screen ---------- */
+#bsod {
+  position: absolute; inset: 0; z-index: 85; background: var(--bsod); color: var(--bsod-ink);
+  display: flex; align-items: center; justify-content: center; padding: 24px 40px; box-sizing: border-box;
+  font: 28px/1.25 var(--font-text); cursor: none;
+}
+#bsod .txt { max-width: 64ch; display: flex; flex-direction: column; gap: 1.25em; }
+#bsod .hd { align-self: center; background: var(--face); color: var(--bsod); padding: 0 .4em; }
+#bsod p { margin: 0; }
+#bsod .ind { padding-left: 2ch; text-indent: -2ch; }
+#bsod .cont { align-self: center; }
+#bsod .cur { animation: blink 1s steps(2) infinite; }
 #off {
   position: absolute; inset: 0; z-index: 80; background: #000;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
   padding: 24px 16px; box-sizing: border-box; text-align: center;
 }
-#off h1 { font: 700 28px/1.3 var(--font-mono); color: var(--amber); margin: 0; text-wrap: balance; }
-#off button { border: 1px solid var(--amber); background: #000; color: var(--amber); font-family: var(--font-mono); padding: 8px 18px; }
-#off button:hover { background: var(--amber); color: #000; }
-#off .small { color: #8a6a1a; font-family: var(--font-mono); font-size: 12px; max-width: 48ch; margin: 0; }
+#off h1 { font: 400 52px/1.15 var(--font-text); color: var(--amber); margin: 0; text-wrap: balance; }
+#off button { border: 1px solid var(--amber); background: #000; color: var(--amber); font: 24px/1 var(--font-text); padding: 6px 18px; cursor: pointer; }
+#off button:hover, #off button:focus-visible { background: var(--amber); color: #000; outline: 0; }
+#off .small { color: var(--amber-soft); font: 22px/1.25 var(--font-text); max-width: 52ch; margin: 0; }
 
-/* Room and monitor */
+/* ---------- Room and monitor ---------- */
 #room {
   height: 100%; box-sizing: border-box;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
@@ -242,17 +251,18 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
 #display {
   position: relative; overflow: hidden;
   width: calc(var(--sw) * 1px); height: calc(var(--sh) * 1px);
-  background: linear-gradient(180deg, var(--desk-top) 0%, var(--desk-bottom) 100%);
+  background: var(--teal);
   box-shadow: 0 0 0 2px #0a0b0d;
+  color-scheme: light;          /* native radio buttons and checkboxes in the 98 dialogs */
 }
 #chin {
   height: calc(var(--chin) * 1px);
   display: flex; align-items: center; gap: 10px; padding: 0 2px;
-  color: var(--label); font-size: 11px;
+  color: var(--label); font-size: 11px; -webkit-font-smoothing: auto;
 }
 #chin .model { flex: 1; text-align: center; font-size: 10px; letter-spacing: .16em; font-variant-numeric: tabular-nums; }
 .cbtn {
-  display: flex; align-items: center; gap: 6px;
+  display: flex; align-items: center; gap: 6px; cursor: pointer;
   border: 0; border-radius: 4px; padding: 4px 6px;
   background: transparent; color: var(--label);
 }
@@ -265,12 +275,11 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
 @keyframes blink { 50% { opacity: .2; } }
 .compact #monitor { border-radius: 8px; }
 .compact #chin .model, .compact .cbtn span { display: none; }
-#rotate { margin: 0; color: var(--label); font-size: 13px; line-height: 1.4; text-align: center; max-width: 36ch; display: none; }
+#rotate { margin: 0; color: var(--label); font-size: 13px; line-height: 1.4; text-align: center; max-width: 36ch; display: none; -webkit-font-smoothing: auto; }
 @media (orientation: portrait) and (max-width: 700px) { #rotate { display: block; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .win { transition: none; }
-  .led.busy { animation: none; }
+  .led.busy, #bsod .cur { animation: none; }
 }
 </style>
 
@@ -280,68 +289,110 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
       <div id="display">
 <div id="desktop">
   <div id="field">
+    <div id="icons">
+      <div class="dicon"><span class="pic" data-icon="my-computer"></span><span class="lbl">My Computer</span></div>
+      <div class="dicon"><span class="pic" data-icon="my-documents"></span><span class="lbl">My Documents</span></div>
+      <div class="dicon"><span class="pic" data-icon="internet-explorer"></span><span class="lbl">Internet Explorer</span></div>
+      <div class="dicon"><span class="pic" data-icon="network-neighborhood"></span><span class="lbl">Network Neighborhood</span></div>
+      <div class="dicon"><span class="pic" data-icon="recycle-bin"></span><span class="lbl">Recycle Bin</span></div>
+      <div class="dicon"><span class="pic" data-icon="online-services"></span><span class="lbl">Online Services</span></div>
+      <div class="dicon"><span class="pic" data-icon="outlook-express"></span><span class="lbl">Outlook Express</span></div>
+      <button class="dicon" id="exeicon" type="button" title="Open idiot.exe" hidden>
+        <span class="pic"><svg viewBox="0 0 32 32" aria-hidden="true" shape-rendering="crispEdges"><path d="M5 3h17l5 5v21H5z" fill="#fff" stroke="#000"/><path d="M22 3v5h5" fill="#c0c0c0" stroke="#000"/><circle cx="16" cy="18" r="7" fill="#fff" stroke="#000" stroke-width="1.6" shape-rendering="auto"/><circle cx="13.6" cy="16" r="1.2"/><circle cx="18.4" cy="16" r="1.2"/><path d="M12.3 19.6q3.7 3.3 7.4 0" fill="none" stroke="#000" stroke-width="1.5" stroke-linecap="round" shape-rendering="auto"/></svg></span>
+        <span class="lbl">idiot.exe</span>
+      </button>
+    </div>
+    <div class="w98" id="ie" hidden>
+      <div class="ttlbar"><span class="ico" data-icon="ie-small"></span><span class="ttl">C:\WINDOWS\Desktop\idiot.html - Microsoft Internet Explorer</span>
+        <span class="btns"><button type="button" class="min" aria-label="Minimize"></button><button type="button" class="max" aria-label="Maximize"></button><button type="button" class="cls" aria-label="Close"></button></span></div>
+      <div class="bar menu"><span>File</span><span>Edit</span><span>View</span><span>Favorites</span><span>Tools</span><span>Help</span></div>
+      <div class="bar tools">
+        <span class="tb"><svg viewBox="0 0 20 20"><path d="M3 10l7-6v4h7v4h-7v4z" fill="#3a8a3a" stroke="#000" stroke-width=".8"/></svg>Back</span>
+        <span class="tb off"><svg viewBox="0 0 20 20"><path d="M17 10l-7-6v4H3v4h7v4z" fill="#a0a0a0" stroke="#808080" stroke-width=".8"/></svg>Forward</span>
+        <span class="tb"><svg viewBox="0 0 20 20"><path d="M6 3h8l3 3v8l-3 3H6l-3-3V6z" fill="#d22" stroke="#000" stroke-width=".8"/><path d="M7 7l6 6M13 7l-6 6" stroke="#fff" stroke-width="1.8"/></svg>Stop</span>
+        <span class="tb"><svg viewBox="0 0 20 20"><path d="M15.5 8.5A6 6 0 1 0 16 12" fill="none" stroke="#2a6ad0" stroke-width="2.2"/><path d="M17.5 4v6h-6z" fill="#2a6ad0"/></svg>Refresh</span>
+        <span class="tb"><svg viewBox="0 0 20 20"><path d="M2 10l8-7 8 7h-2v7h-4v-5H8v5H4v-7z" fill="#e8d070" stroke="#000" stroke-width=".8"/><path d="M7 4h2v2H7z" fill="#a33"/></svg>Home</span>
+        <span class="tsep"></span>
+        <span class="tb"><svg viewBox="0 0 20 20"><circle cx="8" cy="8" r="5" fill="#bfe3ff" stroke="#000" stroke-width="1.4"/><path d="M11.5 11.5l5.5 5.5" stroke="#000" stroke-width="2.6"/></svg>Search</span>
+        <span class="tb"><svg viewBox="0 0 20 20"><path d="M10 2l2.4 5.2 5.6.6-4.2 3.8 1.2 5.6L10 14.4l-5 2.8 1.2-5.6L2 7.8l5.6-.6z" fill="#ffd020" stroke="#000" stroke-width=".8"/></svg>Favorites</span>
+        <span class="tb"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" fill="#fff" stroke="#000" stroke-width="1.2"/><path d="M10 5v5l3.5 2" fill="none" stroke="#2a6ad0" stroke-width="1.6"/></svg>History</span>
+        <span class="tsep"></span>
+        <span class="tb"><svg viewBox="0 0 20 20"><path d="M2 5h16v11H2z" fill="#fff" stroke="#000"/><path d="M2 5l8 6 8-6" fill="none" stroke="#000"/></svg>Mail</span>
+        <span class="tb"><svg viewBox="0 0 20 20"><path d="M5 2h10v5H5z" fill="#fff" stroke="#000"/><path d="M2 7h16v7H2z" fill="#c0c0c0" stroke="#000"/><path d="M5 12h10v6H5z" fill="#fff" stroke="#000"/></svg>Print</span>
+        <span class="tb"><svg viewBox="0 0 20 20"><path d="M4 2h9l3 3v13H4z" fill="#fff" stroke="#000"/><path d="M7 14l7-7 2 2-7 7H7z" fill="#e0b040" stroke="#000" stroke-width=".8"/></svg>Edit</span>
+        <span class="tb"><svg viewBox="0 0 20 20"><path d="M2 3h11v7H7l-3 3v-3H2z" fill="#fff" stroke="#000"/><path d="M9 11h9v6h-2v2l-2-2H9z" fill="#ffd020" stroke="#000"/></svg>Discuss</span>
+      </div>
+      <div class="bar"><span style="padding:0 3px">Address</span><span class="field"><span class="ico" data-icon="ie-small"></span>C:\WINDOWS\Desktop\idiot.html</span></div>
+      <div class="bar"><span style="padding:0 3px">Links</span><span class="lnk"><span data-icon="ie-small"></span>Best of the Web</span><span class="lnk"><span data-icon="ie-small"></span>Channel Guide</span><span class="lnk"><span data-icon="ie-small"></span>Customize Links</span><span class="lnk"><span data-icon="ie-small"></span>Internet Start</span></div>
+      <div class="content"><div class="mv" id="iemv" role="img" aria-label="you are an idiot, three smiling faces, flashing"></div></div>
+    </div>
     <canvas id="smear" aria-hidden="true"></canvas>
-    <button class="dicon" id="exeicon" type="button" title="Open youareanidiot.exe" hidden>
-      <svg class="pic" viewBox="0 0 40 40" aria-hidden="true">
-        <rect x="4" y="3" width="32" height="34" rx="2" fill="#fff" stroke="#333"/>
-        <circle cx="20" cy="21" r="10" fill="#fff" stroke="#000" stroke-width="2.4"/>
-        <circle cx="16.3" cy="18.2" r="1.7" fill="#000"/><circle cx="23.7" cy="18.2" r="1.7" fill="#000"/>
-        <path d="M14.5 24.2q5.5 4.8 11 0" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round"/>
-      </svg>
-      <span class="lbl">youareanidiot.exe</span>
-    </button>
   </div>
 </div>
 
 <div id="taskbar">
-  <button id="start" type="button" aria-haspopup="true" aria-expanded="false">
-    <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 4.5 9 3.6v6.1H3zM10.2 3.4 17 2.4v7.3h-6.8zM3 10.5h6v6.1l-6-.9zM10.2 10.5H17v7.2l-6.8-1z" fill="#fff"/></svg>
-    start
-  </button>
+  <button id="start" type="button" aria-haspopup="true" aria-expanded="false"><span data-icon="start-flag"></span>Start</button>
+  <span class="vsep"></span><span class="grip"></span>
+  <div id="quick"><span data-icon="ie-small"></span><span data-icon="outlook-express"></span><span data-icon="desktop-quick"></span></div>
+  <span class="vsep"></span><span class="grip"></span>
   <div id="tasks"></div>
   <div id="tray">
     <button id="mute" type="button" title="Mute" aria-label="Mute" aria-pressed="false">
-      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7h3l4-3.5v13L6 13H3z" fill="#fff"/><path id="spk" d="M12.5 7.2a4 4 0 0 1 0 5.6M14.6 5a7 7 0 0 1 0 10" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <svg viewBox="0 0 16 16" aria-hidden="true" shape-rendering="crispEdges"><path d="M2 6h3l4-3v10l-4-3H2z" fill="#ffff00" stroke="#000"/><g id="spk"><path d="M11 6q1.5 2 0 4M12.5 4.5q3 3.5 0 7" fill="none" stroke="#000" shape-rendering="auto"/></g></svg>
     </button>
     <span id="clock">12:00 AM</span>
   </div>
 </div>
 
 <div id="startmenu" hidden>
-  <div class="head">You</div>
-  <button class="item" type="button" id="sm-run">Run youareanidiot.exe again</button>
-  <button class="item" type="button" id="sm-mute">Mute sound</button>
-  <div class="foot"><button class="item" type="button" id="sm-off">Turn Off Computer</button></div>
+  <div class="banner"><span><b>Idiot</b>98</span></div>
+  <div class="items">
+    <button class="item" type="button" id="sm-run"><span data-icon="ie-small"></span>Run idiot.exe again</button>
+    <button class="item" type="button" id="sm-mute"><span data-icon="speaker"></span>Mute sound</button>
+    <div class="hsep"></div>
+    <button class="item" type="button" id="sm-off"><span data-icon="my-computer"></span>Shut Down...</button>
+  </div>
 </div>
 
 <div id="dim">
-  <div class="dlg" role="dialog" aria-labelledby="dlg-title" aria-modal="true">
-    <div class="tbar"><span class="ttl" id="dlg-title">Open File - Security Warning</span></div>
+  <div class="w98 dlg active" role="dialog" aria-labelledby="dlg-title" aria-modal="true">
+    <div class="ttlbar"><span class="ttl" id="dlg-title">File Download</span>
+      <span class="btns"><button type="button" class="cls" id="dlg-x" aria-label="Close"></button></span></div>
     <div class="body">
       <div class="row">
-        <svg class="shield" viewBox="0 0 36 36" aria-hidden="true">
-          <path d="M18 2 32 7v10c0 8-6 14-14 17C10 31 4 25 4 17V7z" fill="#e9b422" stroke="#8a5a00" stroke-width="1.5"/>
-          <path d="M18 9v11" stroke="#000" stroke-width="3.2" stroke-linecap="round"/><circle cx="18" cy="25.5" r="2" fill="#000"/>
-        </svg>
-        <p><strong>The publisher could not be verified. Are you sure you want to run this software?</strong></p>
+        <span data-icon="internet-explorer"></span>
+        <div><p>You have chosen to download a file from this location.</p><p style="margin-top:6px"><b>idiot.exe</b> from C:\WINDOWS\Desktop</p></div>
       </div>
-      <dl>
-        <dt>Name:</dt><dd>youareanidiot.exe</dd>
-        <dt>Publisher:</dt><dd>Unknown Publisher</dd>
-        <dt>Type:</dt><dd>Application</dd>
-        <dt>From:</dt><dd>C:\Documents and Settings\You\Desktop</dd>
-      </dl>
+      <fieldset>
+        <legend>What would you like to do with this file?</legend>
+        <label><input type="radio" name="act" id="act-run" checked> Run this program from its current location</label>
+        <label><input type="radio" name="act" id="act-save"> Save this program to disk</label>
+      </fieldset>
       <div class="warn">
-        <svg viewBox="0 0 22 22" aria-hidden="true"><path d="M11 2 21 20H1z" fill="#ffd54a" stroke="#8a5a00"/><path d="M11 8v6" stroke="#000" stroke-width="2.2" stroke-linecap="round"/><circle cx="11" cy="17" r="1.3" fill="#000"/></svg>
-        <p>This program flashes black and white several times a second and plays loud sound. If you are sensitive to flashing light, turn on reduced flashing below or press Cancel.</p>
+        <span data-icon="warning"></span>
+        <p>This program flashes black and white several times a second and plays loud sound. If you are sensitive to flashing light, turn on reduced flashing or press Cancel.</p>
       </div>
       <label><input type="checkbox" id="reduce"> Reduce flashing (slower, lower contrast)</label>
+      <p class="note" id="moreinfo" hidden>There is no more info. You are an idiot.</p>
       <div class="acts">
-        <button class="xpbtn primary" type="button" id="run">Run</button>
-        <button class="xpbtn" type="button" id="cancel">Cancel</button>
+        <button class="btn98 default" type="button" id="run">OK</button>
+        <button class="btn98" type="button" id="cancel">Cancel</button>
+        <button class="btn98" type="button" id="more">More Info</button>
       </div>
-      <p class="note">Trying to close the program will not go well. The slowdown and crash happen only inside this page. Press Esc or use Start &gt; Turn Off Computer to stop it.</p>
+      <p class="note">Trying to close the program will not go well. The slowdown and crash happen only inside this page. Press Esc or use Start &gt; Shut Down to stop it.</p>
     </div>
+  </div>
+</div>
+
+<div id="bsod" hidden>
+  <div class="txt">
+    <span class="hd">Windows</span>
+    <p>A fatal exception 0E has occurred at 0028:C0011E36 in VXD VMM(01) + 00010E36. The current application will be terminated.</p>
+    <div>
+      <p class="ind">*&nbsp;Press any key to terminate the current application.</p>
+      <p class="ind">*&nbsp;Press CTRL+ALT+DEL again to restart your computer. You will lose any unsaved information in all applications.</p>
+    </div>
+    <p class="cont">Press any key to continue <span class="cur">_</span></p>
   </div>
 </div>
 
@@ -374,10 +425,11 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
   'use strict';
   var $ = function (id) { return document.getElementById(id); };
   var desktop = $('desktop'), field = $('field'), tasks = $('tasks');
-  var dim = $('dim'), off = $('off'), blackout = $('blackout'), startmenu = $('startmenu'), exeicon = $('exeicon');
+  var dim = $('dim'), off = $('off'), blackout = $('blackout'), bsod = $('bsod'), startmenu = $('startmenu'), exeicon = $('exeicon');
+  var ieWin = $('ie');
   var reduceBox = $('reduce');
-  var MAX_WINDOWS = 40;
-  var S = { z: 1, running: false, crashing: false, stage: 0, reduced: false, muted: false, windows: [], frames: null, raf: 0, flashTimer: 0, autoTimer: 0, stutterTimer: 0, crashT1: 0, crashT2: 0, phase: 0, lastT: 0, lastApply: 0, hitchUntil: 0 };
+  var S = { z: 10, running: false, crashing: false, stage: 0, reduced: false, muted: false, windows: [], alerts: [], active: null, frames: null,
+    raf: 0, autoTimer: 0, stutterTimer: 0, firstTimer: 0, crashT1: 0, crashT2: 0, crashT3: 0, lastT: 0, lastApply: 0, hitchUntil: 0, ieBorn: 0, ieInv: false, scale: 1 };
 
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) reduceBox.checked = true;
 
@@ -410,6 +462,21 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
     desktop.style.setProperty('--frame-a', 'url("' + S.frames[0].toDataURL('image/png') + '")');
     desktop.style.setProperty('--frame-b', 'url("' + S.frames[1].toDataURL('image/png') + '")');
   }
+
+  var W98 = {
+  'my-computer': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges"><rect x="5.5" y="1.5" width="21" height="17" fill="#c0c0c0" stroke="#000"/><rect x="6" y="2" width="20" height="1" fill="#fff"/><rect x="6" y="2" width="1" height="16" fill="#fff"/><rect x="6" y="17" width="20" height="1" fill="#808080"/><rect x="25" y="2" width="1" height="16" fill="#808080"/><rect x="8.5" y="4.5" width="15" height="11" fill="#000080" stroke="#000"/><rect x="10" y="6" width="9" height="6" fill="#c0c0c0"/><rect x="10" y="6" width="9" height="1" fill="#00f"/><rect x="11" y="8" width="7" height="3" fill="#fff"/><rect x="12" y="19" width="8" height="2" fill="#808080"/><rect x="2.5" y="20.5" width="27" height="6" fill="#c0c0c0" stroke="#000"/><rect x="3" y="21" width="26" height="1" fill="#fff"/><rect x="3" y="21" width="1" height="5" fill="#fff"/><rect x="3" y="25" width="26" height="1" fill="#808080"/><rect x="28" y="21" width="1" height="5" fill="#808080"/><rect x="16" y="22" width="10" height="1" fill="#000"/><rect x="16" y="23" width="10" height="1" fill="#fff"/><rect x="5" y="23" width="2" height="1" fill="#0f0"/><path d="M4.5 27.5h23l2 3.5h-27z" fill="#c0c0c0" stroke="#000"/><rect x="6" y="28" width="20" height="1" fill="#808080"/><rect x="5" y="29" width="22" height="1" fill="#808080"/></svg>',
+  'my-documents': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges"><path d="M2.5 7.5h8l2 2h15v19h-25z" fill="#808000" stroke="#000"/><path d="M7.5 13.5l12-9 7 9.5z" fill="#fff" stroke="#000"/><path d="M11 13l8-6M14 13l6-4.5M17 13l4-3" stroke="#808080" fill="none"/><path d="M1.5 28.5l3-14h26l-3 14z" fill="#ff0" stroke="#000"/><rect x="5" y="15" width="25" height="1" fill="#fff"/><rect x="3" y="27" width="24" height="1" fill="#808000"/></svg>',
+  'internet-explorer': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><ellipse cx="16" cy="16" rx="15" ry="6" transform="rotate(-28 16 16)" fill="none" pathLength="100" stroke="#000080" stroke-width="3"/><ellipse cx="16" cy="16" rx="15" ry="6" transform="rotate(-28 16 16)" fill="none" pathLength="100" stroke="#00f" stroke-width="1.5"/><path d="M8.5 16h15.5a7.5 7.5 0 1 0-2.2 5.5" fill="none" stroke="#000080" stroke-width="6.5"/><path d="M8.5 16h15.5a7.5 7.5 0 1 0-2.2 5.5" fill="none" stroke="#00f" stroke-width="4.5"/><path d="M10 13.5a6 6 0 0 1 5-4" fill="none" stroke="#88f" stroke-width="1.5"/><ellipse cx="16" cy="16" rx="15" ry="6" transform="rotate(-28 16 16)" fill="none" pathLength="100" stroke="#808000" stroke-width="3.2" stroke-dasharray="22 78" stroke-dashoffset="-36"/><ellipse cx="16" cy="16" rx="15" ry="6" transform="rotate(-28 16 16)" fill="none" pathLength="100" stroke="#ff0" stroke-width="1.6" stroke-dasharray="20 80" stroke-dashoffset="-37"/></svg>',
+  'network-neighborhood': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges"><rect x="3.5" y="1.5" width="11" height="9" fill="#c0c0c0" stroke="#000"/><rect x="5.5" y="3.5" width="7" height="5" fill="#00f" stroke="#000"/><rect x="6" y="4" width="3" height="1" fill="#fff"/><rect x="2.5" y="11.5" width="13" height="3" fill="#c0c0c0" stroke="#000"/><rect x="3" y="12" width="12" height="1" fill="#fff"/><rect x="5" y="13" width="3" height="1" fill="#0f0"/><path d="M8.5 15v13.5M2 28.5h28M22.5 30v-2" stroke="#000" fill="none"/><rect x="16.5" y="12.5" width="11" height="9" fill="#c0c0c0" stroke="#000"/><rect x="18.5" y="14.5" width="7" height="5" fill="#008080" stroke="#000"/><rect x="19" y="15" width="3" height="1" fill="#fff"/><rect x="15.5" y="22.5" width="13" height="3" fill="#c0c0c0" stroke="#000"/><rect x="16" y="23" width="12" height="1" fill="#fff"/><rect x="18" y="24" width="3" height="1" fill="#0f0"/><rect x="7.5" y="27.5" width="2" height="2" fill="#ff0" stroke="#000"/></svg>',
+  'recycle-bin': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges"><path d="M5.5 6.5h21l-2.5 24h-16z" fill="#c0c0c0" stroke="#000"/><path d="M9 9l1.7 20M13 9l.6 20M19 9l-.6 20M23 9l-1.7 20" stroke="#fff" fill="none"/><path d="M11 9l1.2 20M17 9v20M21 9l-1.2 20" stroke="#808080" fill="none"/><ellipse cx="16" cy="6.5" rx="10.5" ry="2.5" fill="#808080" stroke="#000"/><g shape-rendering="auto" fill="none" stroke="#008000" stroke-width="2"><path d="M13 15.5l2-3h2l1.5 2.5M20 18.5l1.5 2.5-1 2h-3.5M13.5 23H11l-1-2 1.5-2.5"/></g><path d="M17 13l3.5 1-2.5 2.5zM20.5 25l-3-2 3-2zM9.5 17.5l3.5-.5-.5 3.5z" fill="#008000" shape-rendering="auto"/></svg>',
+  'outlook-express': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges"><rect x="5.5" y="9.5" width="22" height="14" fill="#fff" stroke="#000"/><path d="M6 10l10.5 8 10.5-8" stroke="#808080" fill="none"/><rect x="22.5" y="11.5" width="3" height="3" fill="#f00" stroke="#000"/><rect x="15" y="19" width="9" height="1" fill="#808080"/><rect x="15" y="21" width="7" height="1" fill="#808080"/><g shape-rendering="auto" fill="none" stroke-linecap="round"><path d="M24 6.5C19 1.5 8 2 4.5 10.5" stroke="#000080" stroke-width="3.6"/><path d="M24 6.5C19 1.5 8 2 4.5 10.5" stroke="#00f" stroke-width="2"/><path d="M8 27.5c5 4 16 3.5 20-5" stroke="#000080" stroke-width="3.6"/><path d="M8 27.5c5 4 16 3.5 20-5" stroke="#0ff" stroke-width="2"/></g><path d="M.5 9.5l8 0-4 5z" fill="#00f" stroke="#000080" shape-rendering="auto"/><path d="M24.5 22.5l7.5 0-3.5-5z" fill="#0ff" stroke="#000080" shape-rendering="auto"/></svg>',
+  'online-services': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges"><path d="M2.5 6.5h9l2 2.5h-11z" fill="#ff0" stroke="#000"/><rect x="2.5" y="8.5" width="27" height="19" fill="#ff0" stroke="#000"/><rect x="3" y="9" width="26" height="1" fill="#fff"/><rect x="3" y="9" width="1" height="18" fill="#fff"/><rect x="3" y="26" width="26" height="1" fill="#808000"/><rect x="28" y="10" width="1" height="17" fill="#808000"/></svg>',
+  'ie-small': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><ellipse cx="8" cy="8" rx="7.4" ry="2.6" transform="rotate(-28 8 8)" fill="none" stroke="#000080" stroke-width="1.2"/><path d="M4.4 8.2h7.4a3.7 3.7 0 1 0-1.1 2.8" fill="none" stroke="#000080" stroke-width="3.4"/><path d="M4.4 8.2h7.4a3.7 3.7 0 1 0-1.1 2.8" fill="none" stroke="#00f" stroke-width="2"/><ellipse cx="8" cy="8" rx="7.4" ry="2.6" transform="rotate(-28 8 8)" fill="none" pathLength="100" stroke="#808000" stroke-width="1.6" stroke-dasharray="22 78" stroke-dashoffset="-36"/><ellipse cx="8" cy="8" rx="7.4" ry="2.6" transform="rotate(-28 8 8)" fill="none" pathLength="100" stroke="#ff0" stroke-width=".8" stroke-dasharray="20 80" stroke-dashoffset="-37"/></svg>',
+  'start-flag': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges"><g stroke="#000" stroke-width=".8"><path d="M4 2.5Q6 1.3 8.2 2.6V7Q6 5.8 4 7Z" fill="#f00"/><path d="M8.8 2.9Q11 4.2 14 2.6V7.2Q11 8.6 8.8 7.4Z" fill="#0f0"/><path d="M4 7.6Q6 6.4 8.2 7.7V12.1Q6 10.9 4 12.1Z" fill="#00f"/><path d="M8.8 8Q11 9.3 14 7.8V12.3Q11 13.8 8.8 12.5Z" fill="#ff0"/></g><rect x="2" y="3" width="1" height="1" fill="#f00"/><rect x="0" y="4" width="1" height="1" fill="#f00"/><rect x="2" y="5" width="1" height="1" fill="#f00"/><rect x="1" y="8" width="1" height="1" fill="#00f"/><rect x="2" y="9" width="1" height="1" fill="#00f"/><rect x="0" y="10" width="1" height="1" fill="#00f"/><rect x="2" y="11" width="1" height="1" fill="#00f"/></svg>',
+  'speaker': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges"><rect x="1.5" y="5.5" width="3" height="5" fill="#c0c0c0" stroke="#000"/><path d="M4.5 5.5l4-4h1v13h-1l-4-4z" fill="#ff0" stroke="#000"/><rect x="8" y="3" width="1" height="10" fill="#808000"/><path d="M11.5 6v4M13.5 4v8M11 3.5l1.5-1M11 12.5l1.5 1" stroke="#808080" fill="none"/></svg>',
+  'desktop-quick': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges"><rect x="0.5" y="2.5" width="14" height="11" fill="#c0c0c0" stroke="#000"/><rect x="1" y="3" width="13" height="1" fill="#fff"/><rect x="2.5" y="4.5" width="10" height="7" fill="#008080" stroke="#000"/><rect x="3" y="5" width="4" height="2" fill="#fff"/><g shape-rendering="auto"><path d="M5.5 13.5l7-7 2 2-7 7z" fill="#ff0" stroke="#000" stroke-width=".8"/><path d="M12.5 6.5l1.2-1.2 2 2-1.2 1.2z" fill="#f00"/><path d="M5.5 13.5l-1 2.5 2.5-1z" fill="#000"/></g></svg>',
+  'warning': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path d="M18 5L31 29H5z" fill="#808080"/><path d="M16 2.5L29.5 27.5H2.5z" fill="#ff0" stroke="#000" stroke-width="1.6" stroke-linejoin="round"/><path d="M14.2 9.5h3.6l-.8 11.5h-2z" fill="#000"/><circle cx="16" cy="24" r="1.9" fill="#000"/></svg>'
+};
 
   /* ---------- Audio: "You are an idiot!" + laugh, synthesized to match the original ----------
      Timing, pitch and timbre come from onset and spectral analysis of the original 5.0 s clip:
@@ -615,19 +682,45 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
     return ctx.startRendering().then(function (buf) { return buf.getChannelData(0); });
   };
 
-  /* ---------- Windows: bounce, multiply, never close ---------- */
-  var ICON = '<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.3" fill="#fff" stroke="#000" stroke-width="1.6"/><circle cx="5.7" cy="6.4" r="1.1" fill="#000"/><circle cx="10.3" cy="6.4" r="1.1" fill="#000"/><path d="M5 9.6q3 2.6 6 0" fill="none" stroke="#000" stroke-width="1.4" stroke-linecap="round"/></svg>';
+  /* Message-box chime: a short, bright piano-like chord, synthesized (not the system sound file). */
+  function chime() {
+    if (!AC || !master || S.crashing) return;
+    var t = AC.currentTime + 0.01, notes = [523.3, 659.3, 784, 1046.5];
+    for (var i = 0; i < notes.length; i++) {
+      var o = AC.createOscillator(), g = AC.createGain();
+      o.type = 'triangle'; o.frequency.value = notes[i];
+      g.gain.setValueAtTime(0.0001, t + i * 0.012);
+      g.gain.linearRampToValueAtTime(0.16, t + i * 0.012 + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+      o.connect(g); g.connect(master);
+      o.start(t + i * 0.012); o.stop(t + 0.95);
+    }
+  }
+
+  /* ---------- Icons and title-bar glyphs ---------- */
+  var GLYPH = {
+    min: '<svg viewBox="0 0 8 7" aria-hidden="true" shape-rendering="crispEdges"><path d="M1 5h6v2H1z"/></svg>',
+    max: '<svg viewBox="0 0 8 7" aria-hidden="true" shape-rendering="crispEdges"><path d="M0 0h8v7H0zM1 2v4h6V2z" fill-rule="evenodd"/></svg>',
+    cls: '<svg viewBox="0 0 8 7" aria-hidden="true" shape-rendering="crispEdges"><path d="M0 0h2l2 2 2-2h2L5 3.5 8 7H6L4 5 2 7H0l3-3.5z"/></svg>'
+  };
+  function paintIcons(root) {
+    var els = root.querySelectorAll('[data-icon]');
+    for (var i = 0; i < els.length; i++) if (W98[els[i].getAttribute('data-icon')]) els[i].innerHTML = W98[els[i].getAttribute('data-icon')];
+    var bs = root.querySelectorAll('.ttlbar button');
+    for (i = 0; i < bs.length; i++) for (var k in GLYPH) if (bs[i].classList.contains(k)) bs[i].innerHTML = GLYPH[k];
+  }
+  var POP_TITLE = 'You are an idiot! - Microsoft Internet Explorer';
+  var IE_TITLE = 'C:\\WINDOWS\\Desktop\\idiot.html - Microsoft Internet Explorer';
 
   function bounds() {
     /* layout size, unaffected by the monitor's scale transform */
     return { w: field.clientWidth, h: field.clientHeight };
   }
 
-  /* ---------- Stages: normal, bugging, not responding, crash ----------
-     All of it is simulated. Nothing here loads the device: "lag" is throttled redraws
-     and deliberate pauses, and the trails are stale copies painted on one canvas. */
-  var STAGE1_AT = 6, STAGE2_AT = 16;
-  var TITLE = 'You are an idiot', HUNG = 'You are an idiot (Not Responding)';
+  /* ---------- Stages: running, trails, hung, crash ----------
+     Everything is simulated. Nothing here loads the device: the "lag" is throttled
+     redraws and deliberate pauses, and the trails are stale copies painted on one canvas. */
+  var STAGE1_AT = 8, STAGE2_AT = 20, MAX_WINDOWS = 44;
   function updateStage() {
     if (!S.running || S.crashing) return;
     var n = S.windows.length;
@@ -637,20 +730,18 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
       S.stage = st;
       desktop.classList.toggle('hung', st >= 2);
       setLed(st >= 2 ? 'busy' : 'on');
-      for (var i = 0; i < S.windows.length; i++) S.windows[i].ttl.textContent = st >= 2 ? HUNG : TITLE;
-      scheduleAuto();
       scheduleStutter();
     }
     syncLayers();
   }
   function scheduleAuto() {
     clearTimeout(S.autoTimer);
-    if (!S.running || S.crashing || S.stage === 0) return;
+    if (!S.running || S.crashing) return;
+    /* more windows keep opening on their own, faster as the system bogs down */
     S.autoTimer = setTimeout(function () {
-      var src = S.windows[Math.floor(Math.random() * S.windows.length)];
-      spawn(1, src);
+      if (S.windows.length) spawn(1, S.windows[Math.floor(Math.random() * S.windows.length)]);
       scheduleAuto();
-    }, S.stage === 1 ? 2200 : 850);
+    }, S.stage === 0 ? 5200 : S.stage === 1 ? 2100 : 850);
   }
   function scheduleStutter() {
     clearTimeout(S.stutterTimer);
@@ -658,97 +749,156 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
     S.stutterTimer = setTimeout(function () { stutter(); scheduleStutter(); }, 900 + Math.random() * 1800);
   }
 
-  /* ---------- Windows: bounce, multiply, never close ---------- */
+  /* ---------- Focus and z-order ---------- */
+  function activate(el) {
+    if (S.active && S.active !== el) S.active.classList.remove('active');
+    S.active = el; el.classList.add('active');
+    if (el !== ieWin) el.style.zIndex = ++S.z;
+    updateTasks();
+  }
+
+  /* ---------- Popups: bounce, flash on their own clock, multiply ---------- */
   function spawn(count, near) {
     if (!S.running || S.crashing) return;
     var b = bounds();
     for (var i = 0; i < count; i++) {
       if (S.windows.length >= MAX_WINDOWS) break;
       var el = document.createElement('div');
-      el.className = near ? 'win small' : 'win';
-      el.style.zIndex = ++S.z;
-      el.innerHTML = '<div class="tbar">' + ICON + '<span class="ttl"></span>' +
-        '<span class="btns"><button type="button" class="min" title="Minimize" aria-label="Minimize">_</button>' +
-        '<button type="button" class="max" title="Maximize" aria-label="Maximize">&#9633;</button>' +
-        '<button type="button" class="cls" title="Close" aria-label="Close">&#10005;</button></span></div>' +
-        '<div class="screen" role="img" aria-label="you are an idiot, three smiling faces, flashing"></div>';
+      el.className = 'w98 pop';
+      el.innerHTML = '<div class="ttlbar"><span class="ico" data-icon="ie-small"></span><span class="ttl"></span>' +
+        '<span class="btns"><button type="button" class="min" aria-label="Minimize"></button>' +
+        '<button type="button" class="max" aria-label="Maximize"></button>' +
+        '<button type="button" class="cls" aria-label="Close"></button></span></div>' +
+        '<div class="pg"><div class="mv" role="img" aria-label="you are an idiot, three smiling faces, flashing"></div></div>';
+      el.querySelector('.ttl').textContent = POP_TITLE;
+      paintIcons(el);
       field.appendChild(el);
-      var ttl = el.querySelector('.ttl');
-      ttl.textContent = S.stage >= 2 ? HUNG : TITLE;
-      var w = el.offsetWidth, h = el.offsetHeight;
-      var x, y;
+      var w = el.offsetWidth, h = el.offsetHeight, x, y;
       if (near) {
-        x = near.x + near.w / 2 - w / 2 + (Math.random() * 160 - 80); y = near.y + near.h / 2 - h / 2 + (Math.random() * 120 - 60);
+        x = near.x + near.w / 2 - w / 2 + (Math.random() * 220 - 110); y = near.y + near.h / 2 - h / 2 + (Math.random() * 160 - 80);
       } else {
         x = Math.random() * Math.max(1, b.w - w); y = Math.random() * Math.max(1, b.h - h);
       }
       x = Math.min(Math.max(0, x), Math.max(0, b.w - w)); y = Math.min(Math.max(0, y), Math.max(0, b.h - h));
-      var speed = (S.reduced ? 60 : 120) + Math.random() * (S.reduced ? 50 : 140);
+      var speed = (S.reduced ? 60 : 110) + Math.random() * (S.reduced ? 50 : 130);
       var ang = Math.random() * Math.PI * 2;
-      var win = { el: el, ttl: ttl, tb: el.firstChild.offsetHeight, x: x, y: y, w: w, h: h, vx: Math.cos(ang) * speed, vy: Math.sin(ang) * speed };
-      if (Math.abs(win.vx) < 50) win.vx = 50 * (win.vx < 0 ? -1 : 1);
-      if (Math.abs(win.vy) < 40) win.vy = 40 * (win.vy < 0 ? -1 : 1);
+      var win = { el: el, x: x, y: y, w: w, h: h, tb: el.firstChild.offsetHeight, born: performance.now() - Math.random() * 600, inv: false,
+        vx: Math.cos(ang) * speed, vy: Math.sin(ang) * speed };
+      if (Math.abs(win.vx) < 45) win.vx = 45 * (win.vx < 0 ? -1 : 1);
+      if (Math.abs(win.vy) < 35) win.vy = 35 * (win.vy < 0 ? -1 : 1);
       el.style.transform = 'translate(' + x + 'px,' + y + 'px)';
       S.windows.push(win);
-      (function (win) {
-        var hit = function (n) {
-          return function (e) {
-            e.stopPropagation();
-            /* a hung program answers late */
-            var delay = S.stage >= 2 ? 250 + Math.random() * 650 : 0;
-            setTimeout(function () { if (!S.running || S.crashing) return; bump(win); spawn(n, win); }, delay);
-          };
-        };
-        el.querySelector('.cls').addEventListener('click', hit(2));
-        el.querySelector('.min').addEventListener('click', hit(1));
-        el.querySelector('.max').addEventListener('click', hit(1));
-        /* raise with z-index; re-inserting the node mid-press would swallow the click */
-        el.addEventListener('pointerdown', function () { if (S.stage < 2) el.style.zIndex = ++S.z; });
-      })(win);
+      activate(el);
+      wirePopup(win);
     }
     updateTasks();
     updateStage();
   }
+  function later(fn) {
+    /* a bogged-down system answers late */
+    var delay = S.stage >= 2 ? 250 + Math.random() * 650 : 0;
+    setTimeout(function () { if (S.running && !S.crashing) fn(); }, delay);
+  }
+  function wirePopup(win) {
+    var el = win.el;
+    el.querySelector('.cls').addEventListener('click', function (e) {
+      e.stopPropagation(); later(function () { bump(win); alertBox(win); spawn(2, win); });
+    });
+    el.querySelector('.min').addEventListener('click', function (e) { e.stopPropagation(); later(function () { bump(win); spawn(1, win); }); });
+    el.querySelector('.max').addEventListener('click', function (e) { e.stopPropagation(); later(function () { bump(win); spawn(1, win); }); });
+    /* raise with z-index; re-inserting the node mid-press would swallow the click */
+    el.addEventListener('pointerdown', function () { if (S.stage < 2) activate(el); });
+  }
   function bump(win) {
+    if (!win.vx) return;
     win.vx *= -1.15; win.vy *= -1.15;
-    var lim = 440;
+    var lim = 420;
     win.vx = Math.max(-lim, Math.min(lim, win.vx)); win.vy = Math.max(-lim, Math.min(lim, win.vy));
   }
 
-  /* Stale-pixel trails: once the "desktop stops repainting", every redraw of a window is left behind. */
-  var smear = $('smear'), sg = smear.getContext('2d'), sdpr = 1;
+  /* ---------- "You are an idiot!" message boxes ---------- */
+  function alertBox(near) {
+    if (!S.running || S.crashing) return;
+    if (S.alerts.length >= 6) { S.alerts[0].el.style.zIndex = ++S.z; return; }
+    var el = document.createElement('div');
+    el.className = 'w98 msg';
+    el.setAttribute('role', 'alertdialog');
+    el.innerHTML = '<div class="ttlbar"><span class="ttl">Microsoft Internet Explorer</span><span class="btns"><button type="button" class="cls" aria-label="Close"></button></span></div>' +
+      '<div class="mb"><span data-icon="warning"></span><span>You are an idiot!</span></div>' +
+      '<div class="ok"><button type="button" class="btn98 default">OK</button></div>';
+    paintIcons(el);
+    field.appendChild(el);
+    var b = bounds(), w = el.offsetWidth, h = el.offsetHeight;
+    var x = near ? near.x + near.w / 2 - w / 2 + (Math.random() * 60 - 30) : (b.w - w) / 2;
+    var y = near ? near.y + near.h / 2 - h / 2 + (Math.random() * 40 - 20) : (b.h - h) / 2;
+    x = Math.min(Math.max(0, x), Math.max(0, b.w - w)); y = Math.min(Math.max(0, y), Math.max(0, b.h - h));
+    var box = { el: el, x: x, y: y, w: w, h: h };
+    el.style.transform = 'translate(' + Math.round(x) + 'px,' + Math.round(y) + 'px)';
+    S.alerts.push(box);
+    activate(el);
+    chime();
+    var dismiss = function (e) {
+      e.stopPropagation();
+      later(function () {
+        var i = S.alerts.indexOf(box); if (i < 0) return;
+        S.alerts.splice(i, 1); field.removeChild(el);
+        if (S.active === el) S.active = null;
+        spawn(1, box);                          /* OK doesn't help either */
+      });
+    };
+    el.querySelector('.ok button').addEventListener('click', dismiss);
+    el.querySelector('.cls').addEventListener('click', dismiss);
+    el.addEventListener('pointerdown', function () { if (S.stage < 2) activate(el); });
+  }
+
+  /* ---------- Stale-pixel trails: the desktop stops repainting under moving windows ---------- */
+  var smear = $('smear'), sg = smear.getContext('2d');
   function sizeSmear() {
     var b = bounds();
-    sdpr = Math.min((window.devicePixelRatio || 1) * (S.scale || 1), 2);
-    smear.width = Math.max(1, Math.round(b.w * sdpr)); smear.height = Math.max(1, Math.round(b.h * sdpr));
-    sg.setTransform(sdpr, 0, 0, sdpr, 0, 0);
+    var r = Math.min((window.devicePixelRatio || 1) * (S.scale || 1), 2);
+    smear.width = Math.max(1, Math.round(b.w * r)); smear.height = Math.max(1, Math.round(b.h * r));
+    sg.setTransform(r, 0, 0, r, 0, 0);
   }
   function paintStale(w) {
-    var x = Math.round(w.x), y = Math.round(w.y), ww = w.w, hh = w.h, tb = w.tb, bd = 3;
-    sg.fillStyle = S.stage >= 2 ? '#7c8fbf' : '#0831d9';
-    sg.fillRect(x, y, ww, hh);
-    sg.fillStyle = S.stage >= 2 ? '#9fb0d8' : '#2a64f0';
-    sg.fillRect(x, y, ww, tb);
-    sg.fillStyle = '#d8562f';
-    sg.fillRect(x + ww - tb + 3, y + 3, tb - 7, tb - 7);
-    sg.fillStyle = '#ffffff';
-    sg.font = '700 ' + (tb < 26 ? 11 : 12) + 'px Tahoma, Verdana, sans-serif';
-    sg.fillText(S.stage >= 2 ? HUNG : TITLE, x + 24, y + tb * 0.66, ww - 3 * tb);
-    if (S.frames) sg.drawImage(S.frames[S.phase], x + bd, y + tb, ww - bd * 2, hh - tb - bd);
+    var x = Math.round(w.x), y = Math.round(w.y), ww = w.w, hh = w.h, tb = w.tb;
+    /* frame */
+    sg.fillStyle = '#c0c0c0'; sg.fillRect(x, y, ww, hh);
+    sg.fillStyle = '#ffffff'; sg.fillRect(x, y, ww - 1, 1); sg.fillRect(x, y, 1, hh - 1);
+    sg.fillStyle = '#000000'; sg.fillRect(x + ww - 1, y, 1, hh); sg.fillRect(x, y + hh - 1, ww, 1);
+    sg.fillStyle = '#808080'; sg.fillRect(x + ww - 2, y + 1, 1, hh - 2); sg.fillRect(x + 1, y + hh - 2, ww - 2, 1);
+    /* title bar */
+    var g = sg.createLinearGradient(x + 3, 0, x + ww - 3, 0);
+    g.addColorStop(0, '#808080'); g.addColorStop(1, '#b5b5b5');
+    sg.fillStyle = g; sg.fillRect(x + 3, y + 3, ww - 6, tb);
+    sg.fillStyle = '#c0c0c0'; sg.fillRect(x + ww - 21, y + 5, 16, 14);
+    sg.fillStyle = '#000000'; sg.fillRect(x + ww - 6, y + 5, 1, 14); sg.fillRect(x + ww - 21, y + 18, 16, 1);
+    sg.font = '700 11px Tahoma, Verdana, sans-serif'; sg.fillStyle = '#d4d0c8';
+    sg.fillText(POP_TITLE, x + 22, y + 15, ww - 80);
+    sg.fillStyle = '#000'; sg.font = '700 10px Tahoma, Verdana, sans-serif'; sg.fillText('x', x + ww - 16, y + 15);
+    /* page and movie */
+    var py = y + 3 + tb + 2, ph = hh - (py - y) - 3;
+    sg.fillStyle = '#ffffff'; sg.fillRect(x + 3, py, ww - 6, ph);
+    if (S.frames) {
+      var mw = ww - 10, mh = mw * 0.75;
+      sg.drawImage(S.frames[w.inv ? 1 : 0], x + 5, py + 10, mw, mh);
+      sg.fillStyle = '#000'; sg.fillRect(x + 5, py + 9, mw, 1); sg.fillRect(x + 5, py + 10 + mh, mw, 1);
+    }
   }
+
+  /* ---------- Main loop ---------- */
   function step(ts) {
     if (!S.running || S.crashing) return;
     S.raf = requestAnimationFrame(step);
     if (!S.lastT) { S.lastT = ts; S.lastApply = ts; return; }
     S.lastT = ts;
     if (ts < S.hitchUntil) return;                       /* simulated freeze */
-    var interval = S.stage === 0 ? 0 : S.stage === 1 ? 40 : 115;
+    var interval = S.stage === 0 ? 0 : S.stage === 1 ? 55 : 120;
     if (ts - S.lastApply < interval) return;              /* simulated low frame rate */
     var dt = Math.min(S.stage ? 0.45 : 0.05, (ts - S.lastApply) / 1000);
     S.lastApply = ts;
-    if (S.stage === 1 && Math.random() < 0.008) S.hitchUntil = ts + 150 + Math.random() * 250;
+    if (S.stage === 1 && Math.random() < 0.01) S.hitchUntil = ts + 150 + Math.random() * 250;
     if (S.stage === 2 && Math.random() < 0.06) S.hitchUntil = ts + 300 + Math.random() * 900;
-    var b = bounds();
+    var b = bounds(), period = S.reduced ? 700 : 333;
     for (var i = 0; i < S.windows.length; i++) {
       var w = S.windows[i];
       if (S.stage >= 1) paintStale(w);
@@ -756,47 +906,61 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
       var mx = Math.max(0, b.w - w.w), my = Math.max(0, b.h - w.h);
       if (w.x < 0) { w.x = 0; w.vx = Math.abs(w.vx); } else if (w.x > mx) { w.x = mx; w.vx = -Math.abs(w.vx); }
       if (w.y < 0) { w.y = 0; w.vy = Math.abs(w.vy); } else if (w.y > my) { w.y = my; w.vy = -Math.abs(w.vy); }
-      w.el.style.transform = 'translate(' + w.x + 'px,' + w.y + 'px)';
+      w.el.style.transform = 'translate(' + Math.round(w.x) + 'px,' + Math.round(w.y) + 'px)';
     }
+    flashAll(ts, period);
+  }
+  function flashAll(now, period) {
+    /* each window runs its own copy of the movie, so they flash out of step */
+    for (var i = 0; i < S.windows.length; i++) {
+      var w = S.windows[i], inv = Math.floor((now - w.born) / period) % 2 === 1;
+      if (inv !== w.inv) { w.inv = inv; w.el.classList.toggle('inv', inv); }
+    }
+    var ieInv = Math.floor((now - S.ieBorn) / period) % 2 === 1;
+    if (ieInv !== S.ieInv) { S.ieInv = ieInv; ieWin.classList.toggle('inv', ieInv); }
   }
   function updateTasks() {
-    var n = S.windows.length;
-    tasks.innerHTML = n ? '<div class="tbtn">' + ICON + '<span>' + (n > 1 ? '(' + n + ') ' : '') + 'You are an idiot</span></div>' : '';
-  }
-  function flashToggle() {
-    if (performance.now() < S.hitchUntil) return;
-    S.phase ^= 1;
-    desktop.classList.toggle('phase-b', S.phase === 1);
+    if (!S.running) { tasks.innerHTML = ''; return; }
+    var html = '<div class="tbtn' + (S.active === ieWin ? ' cur' : '') + '">' + W98['ie-small'] + '<span>' + IE_TITLE.replace(/\\/g, '&#92;') + '</span></div>';
+    for (var i = 0; i < S.windows.length; i++) {
+      html += '<div class="tbtn' + (S.active === S.windows[i].el ? ' cur' : '') + '">' + W98['ie-small'] + '<span>' + POP_TITLE + '</span></div>';
+    }
+    tasks.innerHTML = html;
   }
 
   /* ---------- Lifecycle ---------- */
   function clearTimers() {
     cancelAnimationFrame(S.raf); S.raf = 0;
-    clearInterval(S.flashTimer); S.flashTimer = 0;
-    clearTimeout(S.autoTimer); clearTimeout(S.stutterTimer);
-    clearTimeout(S.crashT1); clearTimeout(S.crashT2);
+    clearTimeout(S.autoTimer); clearTimeout(S.stutterTimer); clearTimeout(S.firstTimer);
+    clearTimeout(S.crashT1); clearTimeout(S.crashT2); clearTimeout(S.crashT3);
   }
   function run() {
     S.reduced = reduceBox.checked;
     buildFrames(S.reduced);
-    dim.hidden = true; exeicon.hidden = true; off.hidden = true; blackout.hidden = true;
-    S.running = true; S.crashing = false; S.stage = 0; S.lastT = 0; S.hitchUntil = 0; S.phase = 0;
-    desktop.classList.remove('phase-b', 'hung');
+    dim.hidden = true; exeicon.hidden = true; off.hidden = true; blackout.hidden = true; bsod.hidden = true;
+    S.running = true; S.crashing = false; S.stage = 0; S.lastT = 0; S.hitchUntil = 0;
+    S.ieBorn = performance.now(); S.ieInv = false;
+    desktop.classList.remove('hung');
     sizeSmear();
     clearTimers();
-    S.flashTimer = setInterval(flashToggle, S.reduced ? 700 : 333); /* original: 4 frames at 12 fps */
+    ieWin.hidden = false; ieWin.classList.remove('inv');
+    activate(ieWin);
     startAudio();
-    if (!S.windows.length) spawn(1);
+    /* the page plays for a few seconds, then the popups start */
+    S.firstTimer = setTimeout(function () { spawn(4, null); scheduleAuto(); }, 2600);
     S.raf = requestAnimationFrame(step);
   }
   function stopAll() {
     S.running = false; S.crashing = false; S.stage = 0;
     clearTimers();
     stopAudio();
-    for (var i = 0; i < S.windows.length; i++) field.removeChild(S.windows[i].el);
-    S.windows = [];
+    var i;
+    for (i = 0; i < S.windows.length; i++) field.removeChild(S.windows[i].el);
+    for (i = 0; i < S.alerts.length; i++) field.removeChild(S.alerts[i].el);
+    S.windows = []; S.alerts = []; S.active = null;
+    ieWin.hidden = true;
     sg.clearRect(0, 0, smear.width, smear.height);
-    desktop.classList.remove('phase-b', 'hung');
+    desktop.classList.remove('hung');
     updateTasks();
     clock();
     setLed('on');
@@ -814,48 +978,66 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
     clearTimers();                       /* freeze on the current frame */
     desktop.classList.add('hung');
     setLed('busy');
-    crashBuzz(3.2);
+    crashBuzz(14);                       /* the sound buffer sticks and loops */
     S.crashT1 = setTimeout(function () {
-      stopAudio();
-      blackout.hidden = false;
-      S.crashT2 = setTimeout(function () {
-        stopAll();
-        blackout.hidden = true;
-        showOff(true);
-      }, 1600);
-    }, 3200);
+      bsod.hidden = false;               /* the buzz keeps going behind the blue screen */
+      S.crashT3 = setTimeout(endCrash, 12000);
+    }, 2400);
+  }
+  function endCrash() {
+    if (!S.crashing || bsod.hidden) return;
+    clearTimeout(S.crashT3);
+    stopAudio();
+    bsod.hidden = true; blackout.hidden = false;
+    S.crashT2 = setTimeout(function () {
+      stopAll();
+      blackout.hidden = true;
+      showOff(true);
+    }, 1400);
   }
   function shutDown() {
     stopAll();
     closeStart();
-    dim.hidden = true; blackout.hidden = true;
+    dim.hidden = true; blackout.hidden = true; bsod.hidden = true;
     showOff(false);
   }
   function showDialog() {
     off.hidden = true; closeStart();
+    $('moreinfo').hidden = true;
     dim.hidden = false;
     $('run').focus();
   }
   function openStart() { startmenu.hidden = false; $('start').setAttribute('aria-expanded', 'true'); }
   function closeStart() { startmenu.hidden = true; $('start').setAttribute('aria-expanded', 'false'); }
 
+  /* ---------- Wiring ---------- */
   $('run').addEventListener('click', run);
-  $('cancel').addEventListener('click', function () { dim.hidden = true; exeicon.hidden = false; exeicon.focus(); });
-  exeicon.addEventListener('click', showDialog);
+  var cancel = function () { dim.hidden = true; exeicon.hidden = false; exeicon.focus(); };
+  $('cancel').addEventListener('click', cancel);
+  $('dlg-x').addEventListener('click', cancel);
+  $('more').addEventListener('click', function () { $('moreinfo').hidden = false; });
+  exeicon.addEventListener('dblclick', showDialog);
+  exeicon.addEventListener('click', function (e) { if (e.detail === 0 || matchMedia('(pointer: coarse)').matches) showDialog(); });
+  exeicon.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); showDialog(); } });
   $('reboot').addEventListener('click', showDialog);
   $('start').addEventListener('click', function (e) { e.stopPropagation(); startmenu.hidden ? openStart() : closeStart(); });
   $('sm-off').addEventListener('click', shutDown);
-  $('sm-run').addEventListener('click', function () { closeStart(); if (S.running) spawn(1, S.windows[0]); else showDialog(); });
+  $('sm-run').addEventListener('click', function () { closeStart(); if (S.running) spawn(1, S.windows[0] || null); else showDialog(); });
   $('sm-mute').addEventListener('click', function () { closeStart(); setMuted(!S.muted); });
   $('mute').addEventListener('click', function () { setMuted(!S.muted); });
+  ieWin.querySelector('.cls').addEventListener('click', function (e) {
+    e.stopPropagation(); later(function () { alertBox(null); spawn(2, null); });
+  });
+  ieWin.querySelector('.min').addEventListener('click', function (e) { e.stopPropagation(); later(function () { spawn(1, null); }); });
+  ieWin.querySelector('.max').addEventListener('click', function (e) { e.stopPropagation(); later(function () { spawn(1, null); }); });
+  ieWin.addEventListener('pointerdown', function () { if (S.running && S.stage < 2) activate(ieWin); });
+  bsod.addEventListener('click', endCrash);
   document.addEventListener('click', function (e) { if (!startmenu.hidden && !startmenu.contains(e.target)) closeStart(); });
   document.addEventListener('keydown', function (e) {
+    if (!bsod.hidden) { e.preventDefault(); endCrash(); return; }   /* "Press any key to continue" */
     if (e.key === 'Escape') { if (!startmenu.hidden) closeStart(); else if (S.running) shutDown(); }
   });
-  window.addEventListener('resize', function () {
-    for (var i = 0; i < S.windows.length; i++) { var q = S.windows[i]; q.w = q.el.offsetWidth; q.h = q.el.offsetHeight; q.tb = q.el.firstChild.offsetHeight; }
-    fit();
-  });
+  window.addEventListener('resize', function () { fit(); });
   document.addEventListener('visibilitychange', function () {
     if (!AC) return;
     if (document.hidden) { if (master) master.gain.setTargetAtTime(0, AC.currentTime, 0.02); }
@@ -871,7 +1053,7 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
   clock(); setInterval(clock, 15000);
 
   /* Test hook: jump straight to a window count to check each stage. */
-  window.idiotSpawn = function (n) { for (var i = 0; i < n; i++) spawn(1, S.windows[i % S.windows.length]); return S.stage; };
+  window.idiotSpawn = function (n) { for (var i = 0; i < n; i++) spawn(1, S.windows[i % Math.max(1, S.windows.length)] || null); return S.stage; };
 
   /* ---------- Monitor: fixed resolution, scaled to fit, power and full screen ---------- */
   var RES = [[1280, 800], [1024, 640], [768, 480]];
@@ -906,7 +1088,7 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
   $('power').addEventListener('click', function () {
     if (S.powered) {
       stopAll(); closeStart();
-      dim.hidden = true; off.hidden = true; exeicon.hidden = true;
+      dim.hidden = true; off.hidden = true; exeicon.hidden = true; bsod.hidden = true;
       blackout.hidden = false;
       S.powered = false; setLed('off');
     } else {
@@ -934,6 +1116,7 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
   document.addEventListener('webkitfullscreenchange', onFS);
   window.addEventListener('orientationchange', function () { setTimeout(fit, 150); });
 
+  paintIcons(document);
   fit();
   buildFrames(false);
   $('run').focus();
