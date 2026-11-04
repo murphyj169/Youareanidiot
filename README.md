@@ -4,12 +4,11 @@ A single-file recreation of the "You are an idiot!" meme as seen in its best-kno
 demo: a Windows 98 desktop runs `idiot.exe`, Internet Explorer opens the classic two-frame
 Flash loop (serif "you are an idiot", three hopping smileys, black/white strobe), then small
 IE popups bounce around the screen, each flashing on its own clock, and every attempt to
-close one brings up a "You are an idiot!" message box and spawns more. Every window plays its own copy of the jingle, "You are an idiot! Ha ha ha ha ha ha ha ha!",
+close one brings up a "You are an idiot!" message box and spawns more. Every window plays its own copy of "You are an idiot! Ha ha ha ha ha ha ha!" on repeat,
 starting when it opens, so the copies pile up as the windows multiply. The jingle is an
-original recording made for this page: an offline text-to-speech voice (Piper), pitched up
-into a three-voice chord and placed on the original 5-second timing. An offline speech
-recognizer transcribes it as "you are an idiot | ha ha ha ha ha ha ha ha". It is embedded as a
-small MP3, so the page has no external assets.
+original recording made for this page with an offline text-to-speech voice (Piper) at its
+natural speed and pitch. An offline speech recognizer transcribes it as "you are an idiot
+ha ha ha ha ha ha ha". It is embedded as a small MP3, so the page has no external assets.
 
 Open `index.html` in a browser. On a computer the desktop runs inside a widescreen PC
 monitor at a fixed resolution (1280x800, 1024x640 or 768x480, whichever fits). On touch
@@ -36,8 +35,8 @@ The run follows the meme videos, driven by how many windows are open:
 1. **Normal.** Internet Explorer plays the page, then four popups appear. A window bounces and "you are an idiot, ha ha ha ha" repeats on a 5 s loop.
 2. **Bugging (8+ windows).** The desktop stops repainting, so windows leave staircase
    trails, motion turns choppy, and more windows open on their own.
-3. **Hung (20+ windows).** Trails take over the whole screen. The cursor turns to an hourglass, the clock stops, and clicks answer late. A second and third copy of the phrase
-   start overlapping, and the sound skips and stutters.
+3. **Hung (20+ windows).** Trails take over the whole screen. The cursor turns to an hourglass, the clock stops, and clicks answer late. Every window keeps
+   repeating its own copy of the jingle.
    Closing a window now brings up Internet Explorer's "This browser window ... is busy"
    box, which also appears on its own at 40 windows. Start > Shut Down dims the screen
    and then gives up, as in the video.
