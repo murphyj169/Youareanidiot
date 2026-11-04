@@ -613,7 +613,7 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
     tick();
     liveTimer = setInterval(tick, 500);
   }
-  var LAYER_GAIN = [1, 0.75, 0.62, 0.55];
+  var LAYER_GAIN = [1, 0.62, 0.5];
   function addLayer() {
     var i = layers.length;
     var src = AC.createBufferSource(); src.buffer = loopBuf; src.loop = true;
@@ -625,7 +625,9 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
   }
   function syncLayers() {
     if (!AC || !loopBuf || S.crashing) return;
-    var want = S.stage === 0 ? 1 : S.stage === 1 ? 2 : (S.windows.length >= 28 ? 4 : 3);
+    /* the recording shows one audible copy at a time while the windows multiply;
+       extra offset copies pile up only once the system hangs */
+    var want = S.stage < 2 ? 1 : (S.windows.length >= 32 ? 3 : 2);
     while (layers.length < want) addLayer();
   }
   function stutter() {
@@ -682,20 +684,6 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
     return ctx.startRendering().then(function (buf) { return buf.getChannelData(0); });
   };
 
-  /* Message-box chime: a short, bright piano-like chord, synthesized (not the system sound file). */
-  function chime() {
-    if (!AC || !master || S.crashing) return;
-    var t = AC.currentTime + 0.01, notes = [523.3, 659.3, 784, 1046.5];
-    for (var i = 0; i < notes.length; i++) {
-      var o = AC.createOscillator(), g = AC.createGain();
-      o.type = 'triangle'; o.frequency.value = notes[i];
-      g.gain.setValueAtTime(0.0001, t + i * 0.012);
-      g.gain.linearRampToValueAtTime(0.16, t + i * 0.012 + 0.008);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
-      o.connect(g); g.connect(master);
-      o.start(t + i * 0.012); o.stop(t + 0.95);
-    }
-  }
 
   /* ---------- Icons and title-bar glyphs ---------- */
   var GLYPH = {
@@ -835,8 +823,7 @@ button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: de
     var box = { el: el, x: x, y: y, w: w, h: h };
     el.style.transform = 'translate(' + Math.round(x) + 'px,' + Math.round(y) + 'px)';
     S.alerts.push(box);
-    activate(el);
-    chime();
+    activate(el);                         /* the video has no system sound on these boxes */
     var dismiss = function (e) {
       e.stopPropagation();
       later(function () {
