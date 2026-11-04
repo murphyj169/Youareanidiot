@@ -10,7 +10,13 @@ sixteen shrill laughs around B4, with the screen inverting every 333 ms (4 frame
 as in the original Flash file. `window.renderIdiotLoop(seconds)` renders one loop offline
 for checking.
 
-Open `index.html` in a browser. It starts with the XP "Open File - Security Warning" dialog,
+Open `index.html` in a browser. The desktop runs inside a widescreen PC monitor at a fixed
+resolution (1280x800, 1024x640 or 768x480, whichever fits) scaled to the window, so it is
+made for landscape. On a phone, turn it sideways and tap Full screen on the monitor's bezel;
+supported browsers also lock to landscape. The bezel's power button turns the monitor off
+and on, and its LED blinks amber while the system is hung.
+
+ It starts with the XP "Open File - Security Warning" dialog,
 which also carries the photosensitivity and sound warning and a reduced-flashing option.
 
 ## How it plays out

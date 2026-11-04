@@ -7,9 +7,10 @@
 <title>You Are An Idiot</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
-/* Layout: a simulated Windows XP desktop. The prank window bounces inside the
-   desktop area, a taskbar sits at the bottom, dialogs float on top. Single
-   theme by choice: this page imitates one specific operating system look. */
+/* Layout: a widescreen PC monitor in a dim room. Inside it, a simulated Windows XP
+   desktop runs at a fixed resolution (1280x800, 1024x640 or 768x480, whichever fits)
+   and is scaled to the viewport; landscape fills it best. Single theme by choice:
+   the page imitates one specific operating system on one specific screen. */
 :root {
   --desk-top: #4f94e6;          /* XP "Bliss" sky */
   --desk-bottom: #1d4d9c;
@@ -32,8 +33,15 @@
   --font-ui: Tahoma, Verdana, "Segoe UI", "DejaVu Sans", sans-serif;
   --font-meme: "Times New Roman", Times, "Liberation Serif", "Nimbus Roman", serif;
   --font-mono: "Lucida Console", "Courier New", Menlo, monospace;
-  --ww: clamp(220px, 60vw, 360px);
-  --ws: clamp(132px, 21vw, 210px);  /* spawned windows are smaller */
+  --ww: 340px;
+  --ws: 170px;                  /* spawned windows are smaller */
+  --room: #121419;              /* the dark room around the monitor */
+  --room-hi: #22252d;
+  --bezel: #25272c;
+  --bezel-hi: #3b3e45;
+  --label: #8d929c;
+  --led: #3dff6e;
+  --led-busy: #ffb000;
   color-scheme: light;
 }
 [hidden] { display: none !important; }
@@ -41,7 +49,7 @@ html, body { height: 100%; }
 body {
   margin: 0;
   overflow: hidden;
-  background: linear-gradient(180deg, var(--desk-top) 0%, var(--desk-bottom) 100%);
+  background: radial-gradient(ellipse at 50% 38%, var(--room-hi) 0%, var(--room) 72%);
   color: var(--ink);
   font-family: var(--font-ui);
   font-size: 13px;
@@ -55,8 +63,7 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
   position: relative;
   height: 100%;
   box-sizing: border-box;
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-inline: 12px;
   padding-block: 12px 46px;
   overflow: hidden;
 }
@@ -74,7 +81,7 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
 .dicon .lbl { font-size: 12px; line-height: 1.2; word-break: break-all; }
 
 #smear { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-#blackout { position: fixed; inset: 0; z-index: 79; background: #000; cursor: none; }
+#blackout { position: absolute; inset: 0; z-index: 79; background: #000; cursor: none; }
 .hung, .hung * { cursor: progress !important; }
 .hung .win { border-color: #7c8fbf; background: #7c8fbf; }
 .hung .tbar { background: linear-gradient(180deg, #b7c4e6, #9fb0d8); }
@@ -124,16 +131,15 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
 
 /* Taskbar */
 #taskbar {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 50;
   height: 34px;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
   display: flex; align-items: stretch;
   background: linear-gradient(180deg, #3168d5 0%, var(--task) 8%, var(--task) 90%, var(--task-lo) 100%);
   box-shadow: 0 -1px 0 #6b9ff2;
 }
 #start {
   flex: none; display: flex; align-items: center; gap: 6px;
-  padding: 0 14px 0 max(10px, env(safe-area-inset-left, 0px));
+  padding: 0 14px 0 10px;
   border: 0; border-radius: 0 12px 12px 0;
   background: linear-gradient(180deg, var(--start-hi) 0%, var(--start) 20%, #2f7f22 100%);
   color: #fff; font-style: italic; font-weight: 700; font-size: 16px;
@@ -149,7 +155,7 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
 .tbtn .ico { width: 14px; height: 14px; }
 #tray {
   flex: none; display: flex; align-items: center; gap: 8px;
-  padding: 0 max(10px, env(safe-area-inset-right, 0px)) 0 10px;
+  padding: 0 10px;
   background: linear-gradient(180deg, #19a7f6 0%, var(--tray) 60%, #0d7fd0 100%);
   box-shadow: inset 2px 0 3px rgba(0,0,0,.25); color: #fff; font-size: 12px;
 }
@@ -158,7 +164,7 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
 #clock { font-variant-numeric: tabular-nums; }
 
 #startmenu {
-  position: fixed; left: max(0px, env(safe-area-inset-left, 0px)); bottom: calc(34px + env(safe-area-inset-bottom, 0px));
+  position: absolute; left: 0; bottom: 34px;
   z-index: 60; width: 230px;
   border: 1px solid var(--chrome-lo); border-radius: 6px 6px 0 0; overflow: hidden;
   background: #fff; box-shadow: 2px 2px 8px rgba(0,0,0,.4);
@@ -176,8 +182,8 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
 #startmenu .foot .item:hover { text-decoration: underline; }
 
 /* Dialog: Open File - Security Warning */
-#dim { position: fixed; inset: 0; z-index: 70; display: flex; align-items: center; justify-content: center;
-  padding: 16px max(16px, env(safe-area-inset-left, 0px)); box-sizing: border-box; }
+#dim { position: absolute; inset: 0; z-index: 70; display: flex; align-items: center; justify-content: center;
+  padding: 16px; box-sizing: border-box; }
 .dlg {
   width: 100%; max-width: 420px;
   border: 3px solid var(--chrome); border-top: 0; border-radius: 8px 8px 0 0;
@@ -206,20 +212,72 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
 
 /* Shut-down screen */
 #off {
-  position: fixed; inset: 0; z-index: 80; background: #000;
+  position: absolute; inset: 0; z-index: 80; background: #000;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px;
-  padding: 24px max(16px, env(safe-area-inset-left, 0px)); box-sizing: border-box; text-align: center;
+  padding: 24px 16px; box-sizing: border-box; text-align: center;
 }
-#off h1 { font: 700 clamp(18px, 3.4vw, 30px)/1.3 var(--font-mono); color: var(--amber); margin: 0; text-wrap: balance; }
+#off h1 { font: 700 28px/1.3 var(--font-mono); color: var(--amber); margin: 0; text-wrap: balance; }
 #off button { border: 1px solid var(--amber); background: #000; color: var(--amber); font-family: var(--font-mono); padding: 8px 18px; }
 #off button:hover { background: var(--amber); color: #000; }
 #off .small { color: #8a6a1a; font-family: var(--font-mono); font-size: 12px; max-width: 48ch; margin: 0; }
 
+/* Room and monitor */
+#room {
+  height: 100%; box-sizing: border-box;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 10px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+}
+#fit { position: relative; flex: none; }
+#monitor {
+  position: absolute; top: 0; left: 0; transform-origin: 0 0;
+  box-sizing: border-box;
+  width: calc(var(--sw) * 1px + var(--bz) * 2px);
+  padding: calc(var(--bz) * 1px) calc(var(--bz) * 1px) 0;
+  background: linear-gradient(180deg, var(--bezel-hi) 0%, var(--bezel) 14%, var(--bezel) 86%, #1a1b1f 100%);
+  border-radius: 14px;
+  box-shadow: 0 0 0 1px #000, 0 26px 70px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.09);
+}
+#display {
+  position: relative; overflow: hidden;
+  width: calc(var(--sw) * 1px); height: calc(var(--sh) * 1px);
+  background: linear-gradient(180deg, var(--desk-top) 0%, var(--desk-bottom) 100%);
+  box-shadow: 0 0 0 2px #0a0b0d;
+}
+#chin {
+  height: calc(var(--chin) * 1px);
+  display: flex; align-items: center; gap: 10px; padding: 0 2px;
+  color: var(--label); font-size: 11px;
+}
+#chin .model { flex: 1; text-align: center; font-size: 10px; letter-spacing: .16em; font-variant-numeric: tabular-nums; }
+.cbtn {
+  display: flex; align-items: center; gap: 6px;
+  border: 0; border-radius: 4px; padding: 4px 6px;
+  background: transparent; color: var(--label);
+}
+.cbtn:hover { color: #dfe2e8; background: rgba(255,255,255,.07); }
+.cbtn:focus-visible { outline: 2px solid #8fb4ff; outline-offset: 1px; }
+.cbtn svg { width: 15px; height: 15px; display: block; }
+.led { width: 7px; height: 7px; border-radius: 50%; background: var(--led); box-shadow: 0 0 6px var(--led); flex: none; }
+.led.offl { background: #34363b; box-shadow: none; }
+.led.busy { background: var(--led-busy); box-shadow: 0 0 6px var(--led-busy); animation: blink .3s steps(2) infinite; }
+@keyframes blink { 50% { opacity: .2; } }
+.compact #monitor { border-radius: 8px; }
+.compact #chin .model, .compact .cbtn span { display: none; }
+#rotate { margin: 0; color: var(--label); font-size: 13px; line-height: 1.4; text-align: center; max-width: 36ch; display: none; }
+@media (orientation: portrait) and (max-width: 700px) { #rotate { display: block; } }
+
 @media (prefers-reduced-motion: reduce) {
   .win { transition: none; }
+  .led.busy { animation: none; }
 }
 </style>
 
+<div id="room">
+  <div id="fit">
+    <div id="monitor">
+      <div id="display">
 <div id="desktop">
   <div id="field">
     <canvas id="smear" aria-hidden="true"></canvas>
@@ -294,6 +352,22 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
   <p class="small" id="off-note">The program has been stopped and the sound has been silenced.</p>
   <button type="button" id="reboot">Restart</button>
 </div>
+      </div>
+      <div id="chin">
+        <button class="cbtn" id="fs" type="button" title="Full screen">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 5.5v-4h4M10.5 1.5h4v4M14.5 10.5v4h-4M5.5 14.5h-4v-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+          <span id="fs-label">Full screen</span>
+        </button>
+        <span class="model" id="res">1280 &times; 800 &middot; 60 Hz</span>
+        <span class="led" id="led" aria-hidden="true"></span>
+        <button class="cbtn" id="power" type="button" title="Power" aria-label="Monitor power" aria-pressed="true">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.6a6 6 0 1 0 6 0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M8 1.2v6.3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+  <p id="rotate">Turn your phone sideways to fill the monitor, then tap Full screen.</p>
+</div>
 
 <script>
 (function () {
@@ -303,7 +377,7 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
   var dim = $('dim'), off = $('off'), blackout = $('blackout'), startmenu = $('startmenu'), exeicon = $('exeicon');
   var reduceBox = $('reduce');
   var MAX_WINDOWS = 40;
-  var S = { running: false, crashing: false, stage: 0, reduced: false, muted: false, windows: [], frames: null, raf: 0, flashTimer: 0, autoTimer: 0, stutterTimer: 0, crashT1: 0, crashT2: 0, phase: 0, lastT: 0, lastApply: 0, hitchUntil: 0 };
+  var S = { z: 1, running: false, crashing: false, stage: 0, reduced: false, muted: false, windows: [], frames: null, raf: 0, flashTimer: 0, autoTimer: 0, stutterTimer: 0, crashT1: 0, crashT2: 0, phase: 0, lastT: 0, lastApply: 0, hitchUntil: 0 };
 
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) reduceBox.checked = true;
 
@@ -545,8 +619,8 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
   var ICON = '<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.3" fill="#fff" stroke="#000" stroke-width="1.6"/><circle cx="5.7" cy="6.4" r="1.1" fill="#000"/><circle cx="10.3" cy="6.4" r="1.1" fill="#000"/><path d="M5 9.6q3 2.6 6 0" fill="none" stroke="#000" stroke-width="1.4" stroke-linecap="round"/></svg>';
 
   function bounds() {
-    var r = field.getBoundingClientRect();
-    return { w: r.width, h: r.height };
+    /* layout size, unaffected by the monitor's scale transform */
+    return { w: field.clientWidth, h: field.clientHeight };
   }
 
   /* ---------- Stages: normal, bugging, not responding, crash ----------
@@ -562,6 +636,7 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
     if (st !== S.stage) {
       S.stage = st;
       desktop.classList.toggle('hung', st >= 2);
+      setLed(st >= 2 ? 'busy' : 'on');
       for (var i = 0; i < S.windows.length; i++) S.windows[i].ttl.textContent = st >= 2 ? HUNG : TITLE;
       scheduleAuto();
       scheduleStutter();
@@ -591,6 +666,7 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
       if (S.windows.length >= MAX_WINDOWS) break;
       var el = document.createElement('div');
       el.className = near ? 'win small' : 'win';
+      el.style.zIndex = ++S.z;
       el.innerHTML = '<div class="tbar">' + ICON + '<span class="ttl"></span>' +
         '<span class="btns"><button type="button" class="min" title="Minimize" aria-label="Minimize">_</button>' +
         '<button type="button" class="max" title="Maximize" aria-label="Maximize">&#9633;</button>' +
@@ -626,7 +702,8 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
         el.querySelector('.cls').addEventListener('click', hit(2));
         el.querySelector('.min').addEventListener('click', hit(1));
         el.querySelector('.max').addEventListener('click', hit(1));
-        el.addEventListener('pointerdown', function () { if (S.stage < 2) field.appendChild(el); });
+        /* raise with z-index; re-inserting the node mid-press would swallow the click */
+        el.addEventListener('pointerdown', function () { if (S.stage < 2) el.style.zIndex = ++S.z; });
       })(win);
     }
     updateTasks();
@@ -642,7 +719,7 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
   var smear = $('smear'), sg = smear.getContext('2d'), sdpr = 1;
   function sizeSmear() {
     var b = bounds();
-    sdpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    sdpr = Math.min((window.devicePixelRatio || 1) * (S.scale || 1), 2);
     smear.width = Math.max(1, Math.round(b.w * sdpr)); smear.height = Math.max(1, Math.round(b.h * sdpr));
     sg.setTransform(sdpr, 0, 0, sdpr, 0, 0);
   }
@@ -722,6 +799,7 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
     desktop.classList.remove('phase-b', 'hung');
     updateTasks();
     clock();
+    setLed('on');
   }
   function showOff(crashed) {
     $('off-note').textContent = crashed
@@ -735,6 +813,7 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
     S.crashing = true;
     clearTimers();                       /* freeze on the current frame */
     desktop.classList.add('hung');
+    setLed('busy');
     crashBuzz(3.2);
     S.crashT1 = setTimeout(function () {
       stopAudio();
@@ -775,7 +854,7 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
   });
   window.addEventListener('resize', function () {
     for (var i = 0; i < S.windows.length; i++) { var q = S.windows[i]; q.w = q.el.offsetWidth; q.h = q.el.offsetHeight; q.tb = q.el.firstChild.offsetHeight; }
-    sizeSmear();
+    fit();
   });
   document.addEventListener('visibilitychange', function () {
     if (!AC) return;
@@ -794,6 +873,68 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
   /* Test hook: jump straight to a window count to check each stage. */
   window.idiotSpawn = function (n) { for (var i = 0; i < n; i++) spawn(1, S.windows[i % S.windows.length]); return S.stage; };
 
+  /* ---------- Monitor: fixed resolution, scaled to fit, power and full screen ---------- */
+  var RES = [[1280, 800], [1024, 640], [768, 480]];
+  var room = $('room'), fitBox = $('fit'), monitor = $('monitor'), led = $('led');
+  function setLed(state) { led.className = 'led' + (state === 'off' ? ' offl' : state === 'busy' ? ' busy' : ''); }
+  function fit() {
+    var cs = getComputedStyle(room);
+    var aw = room.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    var ah = room.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    var hint = $('rotate');
+    if (getComputedStyle(hint).display !== 'none') ah -= hint.offsetHeight + 14;
+    var compact = Math.min(aw, ah) < 520;
+    var bz = compact ? 10 : 22, chin = compact ? 26 : 36;
+    var pick = RES[RES.length - 1], k, i;
+    for (i = 0; i < RES.length; i++) {
+      k = Math.min(aw / (RES[i][0] + 2 * bz), ah / (RES[i][1] + bz + chin));
+      if (k >= 0.8) { pick = RES[i]; break; }
+    }
+    k = Math.max(0.1, Math.min(1.5, aw / (pick[0] + 2 * bz), ah / (pick[1] + bz + chin)));
+    document.documentElement.classList.toggle('compact', compact);
+    monitor.style.setProperty('--sw', pick[0]); monitor.style.setProperty('--sh', pick[1]);
+    monitor.style.setProperty('--bz', bz); monitor.style.setProperty('--chin', chin);
+    monitor.style.transform = 'scale(' + k + ')';
+    fitBox.style.width = ((pick[0] + 2 * bz) * k) + 'px';
+    fitBox.style.height = ((pick[1] + bz + chin) * k) + 'px';
+    $('res').textContent = pick[0] + ' \u00d7 ' + pick[1] + ' \u00b7 60 Hz';
+    S.scale = k;
+    for (i = 0; i < S.windows.length; i++) { var q = S.windows[i]; q.w = q.el.offsetWidth; q.h = q.el.offsetHeight; }
+    sizeSmear();
+  }
+  S.powered = true;
+  $('power').addEventListener('click', function () {
+    if (S.powered) {
+      stopAll(); closeStart();
+      dim.hidden = true; off.hidden = true; exeicon.hidden = true;
+      blackout.hidden = false;
+      S.powered = false; setLed('off');
+    } else {
+      blackout.hidden = true;
+      S.powered = true; setLed('on');
+      showDialog();
+    }
+    $('power').setAttribute('aria-pressed', String(S.powered));
+  });
+  var fsBtn = $('fs');
+  if (!(document.fullscreenEnabled || document.webkitFullscreenEnabled)) fsBtn.hidden = true;
+  function inFS() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+  fsBtn.addEventListener('click', function () {
+    var d = document, el = d.documentElement;
+    try {
+      if (inFS()) { (d.exitFullscreen || d.webkitExitFullscreen).call(d); return; }
+      var r = (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+      if (r && r.then) r.then(function () {
+        if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(function () {});
+      }, function () {});
+    } catch (e) {}
+  });
+  var onFS = function () { $('fs-label').textContent = inFS() ? 'Exit full screen' : 'Full screen'; fsBtn.title = $('fs-label').textContent; fit(); };
+  document.addEventListener('fullscreenchange', onFS);
+  document.addEventListener('webkitfullscreenchange', onFS);
+  window.addEventListener('orientationchange', function () { setTimeout(fit, 150); });
+
+  fit();
   buildFrames(false);
   $('run').focus();
 })();
