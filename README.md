@@ -17,8 +17,7 @@ made for landscape. On a phone, turn it sideways and tap Full screen on the moni
 supported browsers also lock to landscape. The bezel's power button turns the monitor off
 and on, and its LED blinks amber while the system is hung.
 
- It starts with the XP "Open File - Security Warning" dialog,
-which also carries the photosensitivity and sound warning and a reduced-flashing option.
+It starts with a Windows 98 "File Download" dialog, which also carries the photosensitivity and sound warning and a reduced-flashing option.
 
 ## How it plays out
 
