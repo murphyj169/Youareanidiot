@@ -322,84 +322,113 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
     desktop.style.setProperty('--frame-b', drawFrame(true, -1, reduced));
   }
 
-  /* ---------- Audio: choir "you are an idiot" + laugh, synthesized ---------- */
-  var AC = null, master = null, noiseBuf = null, loopTimer = 0, nextLoop = 0;
-  var LOOP = 4.2;
-  var VOWELS = { u: [300, 870, 2240], a: [730, 1090, 2440], ae: [660, 1720, 2410], ih: [390, 1990, 2550], ee: [270, 2290, 3010], aw: [570, 840, 2410] };
-  var N = { A3: 220, B3: 246.94, Cs4: 277.18, D4: 293.66, E4: 329.63 };
-
+  /* ---------- Audio: "You are an idiot!" + laugh, synthesized to match the original ----------
+     Timing, pitch and timbre come from onset and spectral analysis of the original 5.0 s clip:
+     six sung syllables on a B major chord (high, bright, breathy voices), a short gap, then
+     sixteen shrill laughs around B4 with a strong breath burst on each. Loop length 5.0 s. */
+  var AC = null, master = null, loopTimer = 0, nextLoop = 0;
+  var LOOP = 5.0;
+  var VOWELS = { u: [350, 1000, 2500], a: [850, 1300, 2700], ae: [800, 1900, 2700], ih: [450, 2100, 2800], ee: [330, 2500, 3200], aw: [650, 1000, 2600], ha: [950, 1500, 2900] };
+  var B3 = 246.9, B4 = 493.9, Ds5 = 622.3, E5 = 659.3, Fs5 = 740, B5 = 987.8;
+  var WORDS = [
+    { t: 0.115, d: 0.40, v: 'u',  n: [[B3, 0.65], [B4, 0.8], [Fs5, 0.3]], br: 0.18 },   /* you */
+    { t: 0.564, d: 0.28, v: 'a',  n: [[B4, 0.6], [Ds5, 0.4], [Fs5, 0.4]], br: 0.45 },   /* are */
+    { t: 0.833, d: 0.20, v: 'ae', n: [[Ds5, 0.5], [Fs5, 0.5], [B5, 0.22]], br: 0.3 }, /* an */
+    { t: 1.018, d: 0.24, v: 'ih', n: [[Fs5, 1.0], [Ds5, 0.6], [B5, 0.35]], br: 0.25 },  /* i */
+    { t: 1.252, d: 0.14, v: 'ee', n: [[E5, 0.9], [Fs5, 0.5], [Ds5, 0.5]], br: 0.22 },   /* di */
+    { t: 1.372, d: 0.27, v: 'aw', n: [[Ds5, 0.55], [B4, 0.35], [B5, 0.2]], br: 0.24 },  /* ot */
+    { t: 1.517, d: 0.13, v: 'aw', n: [[B5, 0.3], [Ds5, 0.3], [B4, 0.3]], br: 0.20 }     /* -t release */
+  ];
+  var LAUGHS = [
+    [1.896, 0.26, 546], [2.230, 0.15, 425], [2.355, 0.15, 484], [2.564, 0.15, 415],
+    [2.764, 0.15, 493], [2.958, 0.15, 490], [3.178, 0.12, 503], [3.273, 0.12, 520],
+    [3.372, 0.14, 589], [3.507, 0.15, 495], [3.667, 0.15, 474], [3.841, 0.15, 536],
+    [4.041, 0.15, 511], [4.250, 0.15, 482], [4.465, 0.18, 487], [4.774, 0.22, 506]
+  ];
+  var noiseCache = [];
+  function noiseBuffer(ctx) {
+    for (var i = 0; i < noiseCache.length; i++) if (noiseCache[i].ctx === ctx) return noiseCache[i].buf;
+    var b = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate), d = b.getChannelData(0);
+    for (var k = 0; k < d.length; k++) d[k] = Math.random() * 2 - 1;
+    noiseCache.push({ ctx: ctx, buf: b });
+    return b;
+  }
+  function noise(ctx, out, t, dur, fc, q, peak, attack, decay) {
+    var src = ctx.createBufferSource(); src.buffer = noiseBuffer(ctx);
+    var bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = fc; bp.Q.value = q;
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(peak, t + attack);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + attack + decay);
+    src.connect(bp); bp.connect(g); g.connect(out);
+    src.start(t); src.stop(t + dur + 0.02);
+  }
+  function formantVoice(ctx, out, freq, vowel, t, dur, o) {
+    var attack = o.attack, release = o.release, gain = o.gain;
+    var env = ctx.createGain();
+    env.gain.setValueAtTime(0.0001, t);
+    env.gain.linearRampToValueAtTime(gain, t + attack);
+    if (o.decayTo) env.gain.exponentialRampToValueAtTime(gain * o.decayTo, Math.max(t + attack + 0.01, t + dur - release));
+    else env.gain.setValueAtTime(gain, Math.max(t + attack, t + dur - release));
+    env.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    env.connect(out);
+    var f = VOWELS[vowel], mix = [1, 0.7, 0.4];
+    var filters = [];
+    for (var i = 0; i < 3; i++) {
+      var bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = f[i]; bp.Q.value = i === 0 ? 3 : 5;
+      var g = ctx.createGain(); g.gain.value = mix[i];
+      bp.connect(g); g.connect(env); filters.push(bp);
+    }
+    var lfo = ctx.createOscillator(); lfo.frequency.value = 6;
+    var lfoG = ctx.createGain(); lfoG.gain.value = freq * 0.01; lfo.connect(lfoG);
+    var det = o.detune || [-16, -6, 5, 14];
+    for (var k = 0; k < det.length; k++) {
+      var osc = ctx.createOscillator(); osc.type = 'sawtooth'; osc.frequency.value = freq; osc.detune.value = det[k];
+      lfoG.connect(osc.frequency);
+      var pre = ctx.createGain(); pre.gain.value = 0.9 / det.length; osc.connect(pre);
+      for (var j = 0; j < 3; j++) pre.connect(filters[j]);
+      osc.start(t); osc.stop(t + dur + 0.03);
+    }
+    lfo.start(t); lfo.stop(t + dur + 0.03);
+  }
+  function scheduleLoop(ctx, out, t) {
+    var i, w, k;
+    for (i = 0; i < WORDS.length; i++) {
+      w = WORDS[i];
+      for (k = 0; k < w.n.length; k++) {
+        formantVoice(ctx, out, w.n[k][0], w.v, t + w.t, w.d, { gain: w.n[k][1] * 0.55, attack: 0.035, release: 0.07 });
+      }
+      noise(ctx, out, t + w.t, w.d, 2600, 0.6, w.br, 0.03, w.d);
+    }
+    for (i = 0; i < LAUGHS.length; i++) {
+      var lt = t + LAUGHS[i][0], ld = LAUGHS[i][1], f0 = LAUGHS[i][2];
+      formantVoice(ctx, out, f0, 'ha', lt, ld, { gain: 0.65, attack: 0.012, release: 0.05, decayTo: 0.35, detune: [-12, 0, 12] });
+      formantVoice(ctx, out, f0 * 2, 'ha', lt, ld * 0.8, { gain: 0.14, attack: 0.012, release: 0.04, decayTo: 0.3, detune: [-8, 8] });
+      noise(ctx, out, lt - 0.025, 0.06, 1200, 0.8, 0.12, 0.012, 0.045);      /* "h" aspiration */
+      noise(ctx, out, lt, ld, 1800, 0.6, 0.26, 0.01, 0.1);                      /* bright burst on the vowel */
+    }
+  }
+  function makeChain(ctx) {
+    var g = ctx.createGain();
+    var boost = ctx.createGain(); boost.gain.value = 1.35;
+    var comp = ctx.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 5; comp.attack.value = 0.004; comp.release.value = 0.12;
+    g.connect(boost); boost.connect(comp); comp.connect(ctx.destination);
+    return g;
+  }
   function initAudio() {
     var Ctx = window.AudioContext || window.webkitAudioContext;
     if (!Ctx) return false;
     AC = new Ctx();
-    master = AC.createGain(); master.gain.value = S.muted ? 0 : 0.9;
-    var comp = AC.createDynamicsCompressor(); comp.threshold.value = -18; comp.ratio.value = 6;
-    master.connect(comp); comp.connect(AC.destination);
-    noiseBuf = AC.createBuffer(1, AC.sampleRate, AC.sampleRate);
-    var d = noiseBuf.getChannelData(0);
-    for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    master = makeChain(AC);
+    master.gain.value = S.muted ? 0 : 1;
     return true;
-  }
-  function sing(freq, vowel, t, dur, o) {
-    o = o || {};
-    var attack = o.attack || 0.05, release = o.release || 0.09, gain = o.gain || 0.5;
-    var out = AC.createGain();
-    out.gain.setValueAtTime(0.0001, t);
-    out.gain.linearRampToValueAtTime(gain, t + attack);
-    out.gain.setValueAtTime(gain, Math.max(t + attack, t + dur - release));
-    out.gain.linearRampToValueAtTime(0.0001, t + dur);
-    out.connect(master);
-    var f = VOWELS[vowel], mix = [1, 0.55, 0.28], filters = [];
-    for (var i = 0; i < 3; i++) {
-      var bp = AC.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = f[i]; bp.Q.value = i === 0 ? 4.5 : 7;
-      var g = AC.createGain(); g.gain.value = mix[i];
-      bp.connect(g); g.connect(out); filters.push(bp);
-    }
-    var lfo = AC.createOscillator(); lfo.frequency.value = 5.6;
-    var lfoG = AC.createGain(); lfoG.gain.value = freq * 0.012; lfo.connect(lfoG);
-    var det = [-14, -5, 6, 15];
-    for (var k = 0; k < det.length; k++) {
-      var osc = AC.createOscillator(); osc.type = 'sawtooth'; osc.frequency.value = freq; osc.detune.value = det[k];
-      lfoG.connect(osc.frequency);
-      var pre = AC.createGain(); pre.gain.value = 0.3; osc.connect(pre);
-      for (var j = 0; j < 3; j++) pre.connect(filters[j]);
-      osc.start(t); osc.stop(t + dur + 0.05);
-    }
-    lfo.start(t); lfo.stop(t + dur + 0.05);
-    if (o.breath) {
-      var src = AC.createBufferSource(); src.buffer = noiseBuf;
-      var nb = AC.createBiquadFilter(); nb.type = 'bandpass'; nb.frequency.value = 1400; nb.Q.value = 0.9;
-      var ng = AC.createGain();
-      ng.gain.setValueAtTime(0.0001, t); ng.gain.linearRampToValueAtTime(0.22, t + 0.012); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
-      src.connect(nb); nb.connect(ng); ng.connect(master);
-      src.start(t); src.stop(t + 0.12);
-    }
-  }
-  function chord(freq, vowel, t, dur, gain, rel) {
-    sing(freq, vowel, t, dur, { gain: gain, release: rel });
-    sing(freq * 1.5, vowel, t, dur, { gain: gain * 0.32, release: rel });
-    sing(freq * 0.5, vowel, t, dur, { gain: gain * 0.4, release: rel });
-  }
-  function playLoop(t) {
-    chord(N.A3, 'u', t + 0.00, 0.32, 0.5, 0.06);
-    chord(N.B3, 'a', t + 0.32, 0.28, 0.5, 0.06);
-    chord(N.Cs4, 'ae', t + 0.60, 0.24, 0.5, 0.05);
-    chord(N.E4, 'ih', t + 0.84, 0.36, 0.55, 0.06);
-    chord(N.D4, 'ee', t + 1.20, 0.20, 0.5, 0.05);
-    chord(N.B3, 'aw', t + 1.40, 0.56, 0.55, 0.18);
-    var laugh = [N.E4, N.Cs4, N.E4, N.Cs4, N.D4, N.B3, N.D4, N.B3, N.Cs4, N.A3, N.Cs4, N.A3];
-    for (var i = 0; i < laugh.length; i++) {
-      var ht = t + 2.05 + i * 0.16;
-      sing(laugh[i], 'a', ht, 0.14, { gain: 0.5, attack: 0.012, release: 0.06, breath: true });
-      sing(laugh[i] * 0.5, 'a', ht, 0.14, { gain: 0.18, attack: 0.012, release: 0.06 });
-    }
   }
   function startAudio() {
     if (!AC && !initAudio()) return;
     if (AC.state === 'suspended') AC.resume();
     nextLoop = AC.currentTime + 0.08;
     var tick = function () {
-      while (nextLoop - AC.currentTime < 1.5) { playLoop(nextLoop); nextLoop += LOOP; }
+      while (nextLoop - AC.currentTime < 1.5) { scheduleLoop(AC, master, nextLoop); nextLoop += LOOP; }
     };
     tick();
     loopTimer = setInterval(tick, 500);
@@ -410,13 +439,20 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
   }
   function setMuted(m) {
     S.muted = m;
-    if (master) master.gain.setTargetAtTime(m ? 0 : 0.9, AC.currentTime, 0.02);
+    if (master) master.gain.setTargetAtTime(m ? 0 : 1, AC.currentTime, 0.02);
     $('mute').setAttribute('aria-pressed', String(m));
     $('mute').title = m ? 'Unmute' : 'Mute';
     $('mute').setAttribute('aria-label', m ? 'Unmute' : 'Mute');
     $('spk').style.opacity = m ? '0.25' : '1';
     $('sm-mute').textContent = m ? 'Unmute sound' : 'Mute sound';
   }
+  /* Offline render of one loop, for checking the synthesis against the original recording. */
+  window.renderIdiotLoop = function (seconds) {
+    var Off = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    var ctx = new Off(1, Math.round(44100 * (seconds || LOOP)), 44100);
+    scheduleLoop(ctx, makeChain(ctx), 0);
+    return ctx.startRendering().then(function (buf) { return buf.getChannelData(0); });
+  };
 
   /* ---------- Windows: bounce, multiply, never close ---------- */
   var ICON = '<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.3" fill="#fff" stroke="#000" stroke-width="1.6"/><circle cx="5.7" cy="6.4" r="1.1" fill="#000"/><circle cx="10.3" cy="6.4" r="1.1" fill="#000"/><path d="M5 9.6q3 2.6 6 0" fill="none" stroke="#000" stroke-width="1.4" stroke-linecap="round"/></svg>';
@@ -498,7 +534,7 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
     S.running = true; S.lastT = 0; S.phase = 0;
     desktop.classList.remove('phase-b');
     clearInterval(S.flashTimer);
-    S.flashTimer = setInterval(flashToggle, S.reduced ? 700 : 170);
+    S.flashTimer = setInterval(flashToggle, S.reduced ? 700 : 333); /* original: 4 frames at 12 fps */
     startAudio();
     if (!S.windows.length) spawn(1);
     cancelAnimationFrame(S.raf);
@@ -548,7 +584,7 @@ button:focus-visible, input:focus-visible { outline: 2px dotted var(--ink); outl
   document.addEventListener('visibilitychange', function () {
     if (!AC) return;
     if (document.hidden) { if (master) master.gain.setTargetAtTime(0, AC.currentTime, 0.02); }
-    else if (!S.muted && master) master.gain.setTargetAtTime(0.9, AC.currentTime, 0.02);
+    else if (!S.muted && master) master.gain.setTargetAtTime(1, AC.currentTime, 0.02);
   });
 
   function clock() {
